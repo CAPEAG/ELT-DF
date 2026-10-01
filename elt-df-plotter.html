@@ -218,11 +218,8 @@
   .poi-pop table { font-size: 11px; }
   .poi-pop td, .poi-pop th { padding: 2px 4px; }
   .leg-lbl { background: rgba(255,255,255,.9); color: var(--ink); font-size: 11px; font-weight: 600; padding: 2px 5px; border-radius: 4px; white-space: nowrap; width: auto !important; height: auto !important; transform: translate(-50%, -50%); border: 1px solid var(--line); }
-  @media (max-width: 760px), (orientation: portrait) {
-    body { flex-direction: column; }
-    #map { flex: 1 1 auto; min-height: 40dvh; }
-    aside { width: 100% !important; max-width: none; flex: 0 0 var(--panel-h, 50dvh); border-left: none; border-top: 1px solid var(--line); }
-    #divider { display: none; }
+  @media (orientation: portrait) {
+    aside { width: var(--panel-w, min(400px, 48vw)); }
   }
   @media (prefers-reduced-motion: reduce) { .toast, .switch input, .switch input::after, .bar i { transition: none; } }
 </style>
