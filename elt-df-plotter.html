@@ -49,6 +49,7 @@
   body[data-mode="plan"] .mode-df, body[data-mode="plan"] .mode-sim { display: none !important; }
   body[data-mode="df"] .mode-plan, body[data-mode="df"] .mode-sim { display: none !important; }
   body[data-mode="sim"] .mode-plan, body[data-mode="sim"] .mode-df, body[data-mode="sim"] .mode-f104 { display: none !important; }
+  body[data-mode="sim"] .mode-pd, body[data-mode="f104"] .mode-pd { display: none !important; }
   body[data-mode="plan"] .mode-f104, body[data-mode="df"] .mode-f104 { display: none !important; }
   body[data-mode="f104"] .mode-plan, body[data-mode="f104"] .mode-df, body[data-mode="f104"] .mode-sim { display: none !important; }
   .f104 input[type=text], .f104 input.num { font-size: 14px; }
@@ -130,7 +131,13 @@
   details.fold > :last-child { margin-bottom: 14px; }
   .badge { margin-left: auto; font-weight: 500; font-size: 12px; color: var(--muted); }
   .badge.ok { color: var(--ok); }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: end; }
+  .cornerRow { display: flex; gap: 6px; align-items: center; }
+  .cornerRow input { flex: 1; min-width: 0; }
+  .cornerRow button { flex: none; padding: 8px 10px; font-size: 12px; }
+  .gq-chip { display: inline-flex; align-items: center; gap: 4px; background: #FFF1E8; border: 1px solid #C2410C; color: #C2410C; border-radius: 999px; padding: 3px 4px 3px 9px; margin: 0 4px 4px 0; font-size: 12px; font-weight: 600; }
+  .gq-chip button { border: none; background: transparent; color: #C2410C; font-size: 14px; padding: 0 5px; cursor: pointer; min-height: 0; }
+  .area-lbl { background: rgba(255,255,255,.9); border: 1px solid #C2410C; color: #C2410C; border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 700; white-space: nowrap; width: auto !important; height: auto !important; }
   .row.three { grid-template-columns: 1fr 1fr 1fr; }
   label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
   input, select { width: 100%; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); }
@@ -649,6 +656,26 @@
       <button id="wpCancelBtn" style="display:none;width:100%;margin-top:8px">Done editing</button>
       <div class="hint" style="margin-top:8px">Waypoints can also be dragged on the map. Tap a waypoint number on the map or Edit in the list to change its coordinates or name.</div>
       </div>
+    </details>
+
+    <details class="fold mode-pd" id="areaFold">
+      <summary>Search area <span class="badge" id="areaBadge"></span></summary>
+      <div class="hint">Build the assigned area from four corners, from CAP grid quadrants, or both. A corner can be coordinates in any format (27 26.8N 80 19.5W), a corner of a CAP grid or quadrant (MIA 123 NW, MIA 123B SE), a tap on the map, or the iPad's GPS position. Quadrants are added one at a time by typing them or by tapping them on the map, and the parallel track covers everything together.</div>
+      <div id="cornerList"></div>
+      <div class="actions"><button id="areaDrawBtn" class="primary" style="width:auto">Draw area</button><button id="areaWpBtn">Add corners as waypoints</button><button id="areaClearBtn" style="color:var(--sar)">Clear area</button></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <div class="label" style="font-weight:600;margin-bottom:6px">CAP grid quadrants</div>
+        <div class="cornerRow"><input type="text" id="gqIn" placeholder="MIA 123B, or MIA 123 for all four" autocomplete="off" autocapitalize="characters"><button id="gqAddBtn">Add</button></div>
+        <div class="actions" style="margin-top:8px"><button id="gqMapBtn">Select quadrants on the map</button><button id="gqClearBtn" style="color:var(--sar)">Clear quadrants</button></div>
+        <div id="gqList" class="hint" style="margin-top:6px"></div>
+      </div>
+      <div class="offbox" id="areaInfo" style="display:none"></div>
+      <div class="row" style="margin-top:10px">
+        <div><label for="areaDir">Legs run</label><select id="areaDir"><option value="ew">East-west</option><option value="ns">North-south</option></select></div>
+        <div><label for="areaSp">Track spacing (nm)</label><select id="areaSp"><option>0.5</option><option selected>1</option><option>1.5</option><option>2</option></select></div>
+      </div>
+      <button class="primary" id="areaPatBtn">Parallel track covering the area</button>
+      <div class="hint" id="areaPatHint" style="margin-top:6px">Legs are clipped to the area; spacing is copied to SAR patterns and the 104a.</div>
     </details>
 
     <details class="fold mode-plan" id="sarFold">
@@ -1254,8 +1281,114 @@ function wmmDeclination(lat, lon, altKm, year) {
     if (mapMode === 'simbcn') { placeBeacon(lat, lon); setMapMode(null); toast('Beacon placed.'); return; }
     if (mapMode === 'found') { found = [lat, lon]; foundFill(); renderDF(); setMapMode(null); toast('Found location set.'); return; }
     if (mapMode === 'simrep') { reported = [lat, lon]; fillParts('rep', lat, 'repFmt', 'rep'); fillParts('rlon', lon, 'repFmt', 'rlon'); srepFill(); renderDF(); srepStatus(); setMapMode(null); toast('Reported location set.'); return; }
+    if (mapMode === 'gridsel') { const q = gridOf(lat, lon); if (!q) { toast('No CAP grid defined here.'); return; } gqToggle(q); return; }
+    if (mapMode === 'area') { areaSetCorner(areaTapIdx, { lat, lon, text: fmtPos([lat, lon]) }); setMapMode(null); return; }
     if (mapMode === 'pattern') { patTapPoint = [lat, lon]; setMapMode(null); $('patTapMsg').textContent = 'Start point set at ' + fmtPos(patTapPoint) + '.'; $('patTapMsg').style.display = ''; insertPattern(); return; }
   });
+
+  // ---------- Search area (four corners) ----------
+  let area = [null, null, null, null], areaTapIdx = 0, gridSel = [];
+  const areaLayer = L.layerGroup().addTo(map);
+  const CORNER_OF = { NW: (b) => [b.north, b.west], NE: (b) => [b.north, b.east], SW: (b) => [b.south, b.west], SE: (b) => [b.south, b.east], C: (b) => [(b.north + b.south) / 2, (b.west + b.east) / 2] };
+  function parseCorner(q) {
+    q = (q || '').trim(); if (!q) return null;
+    const m = q.toUpperCase().match(/^([A-Z]{3})[ -]*(\d{1,3})[ -]*([ABCD])?[ -]+(NW|NE|SW|SE|C|CENTER)$/);
+    if (m) { const b = gridBounds(m[1], +m[2], m[3] || ''); if (!b) return { err: 'No grid ' + m[1] + ' ' + m[2] + ' on that chart.' }; const k = m[4] === 'CENTER' ? 'C' : m[4], ll = CORNER_OF[k](b); return { lat: ll[0], lon: ll[1], text: q.toUpperCase(), label: b.label + ' ' + (k === 'C' ? 'center' : k + ' corner') }; }
+    if (/^[A-Z]{3}[ -]*\d{1,3}[ -]*[ABCD]?$/i.test(q)) return { err: 'Add the corner: NW, NE, SW, or SE (or C for the center).' };
+    const c = parseLookupCoords(q); if (c) return { lat: c.lat, lon: c.lon, text: q, label: c.city ? '(' + c.city + ')' : '' };
+    return { err: 'Not recognized. Try 27 26.8N 80 19.5W, 27.45 -80.35, or MIA 123B NW.' };
+  }
+  function renderCorners() {
+    $('cornerList').innerHTML = [0, 1, 2, 3].map(i => { const c = area[i]; return '<div style="margin-bottom:8px"><label>Corner ' + (i + 1) + '</label><div class="cornerRow"><input type="text" id="ac' + i + '" placeholder="Coordinates or MIA 123B NW" autocomplete="off" autocapitalize="characters" value="' + esc(c && c.text || '') + '"><button data-acmap="' + i + '">Map</button><button data-acgps="' + i + '">GPS</button></div><div class="hint" id="acs' + i + '" style="margin-top:3px">' + (c ? (c.err ? '<span style="color:var(--sar)">' + esc(c.err) + '</span>' : fmtPos([c.lat, c.lon]) + (c.label ? ' · ' + esc(c.label) : '')) : '') + '</div></div>'; }).join('');
+  }
+  function areaSetCorner(i, c) { area[i] = c; renderCorners(); renderGq(); drawArea(); autosave(); }
+  function areaPts() { return area.filter(c => c && !c.err); }
+  // Selected CAP grid quadrants, kept as ids like "MIA 123B".
+  function gqBounds(id) { const m = id.match(/^([A-Z]{3}) (\d+)([ABCD])$/); return m ? gridBounds(m[1], +m[2], m[3]) : null; }
+  function gqToggle(id) { const i = gridSel.indexOf(id); if (i >= 0) gridSel.splice(i, 1); else gridSel.push(id); renderGq(); drawArea(); autosave(); }
+  function gqAddText(t) {
+    const m = (t || '').trim().toUpperCase().match(/^([A-Z]{3})[ -]*(\d{1,3})[ -]*([ABCD]{1,4})?$/); if (!m) { toast('Enter a grid like MIA 123B, or MIA 123 for all four quadrants.'); return; }
+    if (!gridBounds(m[1], +m[2], '')) { toast('No grid ' + m[1] + ' ' + m[2] + ' on that chart.'); return; }
+    const quads = (m[3] || 'ABCD').split(''); let added = 0;
+    quads.forEach(q => { const id = m[1] + ' ' + m[2] + q; if (!gridSel.includes(id)) { gridSel.push(id); added++; } });
+    renderGq(); drawArea(); autosave(); toast(added ? added + ' quadrant' + (added > 1 ? 's' : '') + ' added.' : 'Already in the area.');
+  }
+  function renderGq() {
+    const el = $('gqList'); const sorted = gridSel.slice().sort();
+    el.innerHTML = sorted.length ? sorted.map(id => '<span class="gq-chip">' + esc(id) + '<button data-gq="' + esc(id) + '" title="Remove">×</button></span>').join('') + '<div style="margin-top:2px">' + sorted.length + ' quadrant' + (sorted.length > 1 ? 's' : '') + ', about ' + (sorted.length * 7.5 * 7.5 * Math.cos(toRad(gqBounds(sorted[0]).north))).toFixed(0) + ' sq nm</div>' : 'No quadrants selected.';
+    const n = areaPts().length; $('areaBadge').textContent = (n ? n + '/4' : '') + (n && sorted.length ? ' + ' : '') + (sorted.length ? sorted.length + ' quad' : '');
+  }
+  $('gqAddBtn').addEventListener('click', () => { gqAddText($('gqIn').value); $('gqIn').value = ''; });
+  $('gqIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); gqAddText($('gqIn').value); $('gqIn').value = ''; } });
+  $('gqMapBtn').addEventListener('click', () => { if (mapMode === 'gridsel') { setMapMode(null); return; } if (!$('capGrid').checked) { $('capGrid').checked = true; $('capGrid').dispatchEvent(new Event('change')); } setMapMode('gridsel', 'Tap grid quadrants to add or remove them'); });
+  $('gqClearBtn').addEventListener('click', async () => { if (gridSel.length && !await ask('Remove all ' + gridSel.length + ' selected quadrants?')) return; gridSel = []; renderGq(); drawArea(); autosave(); });
+  $('gqList').addEventListener('click', e => { const b = e.target.closest('button[data-gq]'); if (b) gqToggle(b.dataset.gq); });
+  // Local planar frame in nm around the area centroid; corners ordered around the centroid so the outline never crosses itself.
+  function areaFrame() {
+    const pts = areaPts(), rectsLL = gridSel.map(gqBounds).filter(Boolean);
+    const hasPoly = pts.length >= 3; if (!hasPoly && !rectsLL.length) return null;
+    const all = pts.map(c => [c.lat, c.lon]).concat(rectsLL.flatMap(b => [[b.north, b.west], [b.south, b.east]]));
+    const lat0 = all.reduce((a, c) => a + c[0], 0) / all.length, lon0 = all.reduce((a, c) => a + c[1], 0) / all.length, k = Math.cos(toRad(lat0));
+    const toXY = c => ({ x: (c.lon - lon0) * 60 * k, y: (c.lat - lat0) * 60 }), toLL = q => [lat0 + q.y / 60, lon0 + q.x / (60 * k)];
+    let poly = null, polyArea = 0;
+    if (hasPoly) { const cx = pts.reduce((a, c) => a + c.lat, 0) / pts.length, cy = pts.reduce((a, c) => a + c.lon, 0) / pts.length; poly = pts.map(c => ({ ...toXY(c), c })).sort((a, b) => Math.atan2(a.c.lat - cx, (a.c.lon - cy) * k) - Math.atan2(b.c.lat - cx, (b.c.lon - cy) * k)); for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; polyArea += a.x * b.y - b.x * a.y; } polyArea = Math.abs(polyArea) / 2; }
+    const rects = rectsLL.map(b => { const a = toXY({ lat: b.south, lon: b.west }), c = toXY({ lat: b.north, lon: b.east }); return { x1: a.x, x2: c.x, y1: a.y, y2: c.y, b }; });
+    const xs = (poly || []).map(q => q.x).concat(rects.flatMap(r => [r.x1, r.x2])), ys = (poly || []).map(q => q.y).concat(rects.flatMap(r => [r.y1, r.y2]));
+    return { poly, rects, toXY, toLL, areaNm2: polyArea + rects.reduce((a, r) => a + (r.x2 - r.x1) * (r.y2 - r.y1), 0), lat0, lon0, xmin: Math.min(...xs), xmax: Math.max(...xs), ymin: Math.min(...ys), ymax: Math.max(...ys) };
+  }
+  function drawArea() {
+    areaLayer.clearLayers(); const f = areaFrame(); $('areaInfo').style.display = f ? '' : 'none';
+    if (!f) return;
+    if (f.poly) {
+      L.polygon(f.poly.map(q => [q.c.lat, q.c.lon]), { color: '#C2410C', weight: 3, dashArray: '10,6', fillColor: '#C2410C', fillOpacity: 0.07 }).addTo(areaLayer);
+      f.poly.forEach(q => L.marker([q.c.lat, q.c.lon], { icon: L.divIcon({ className: 'area-lbl', html: 'C' + (area.indexOf(q.c) + 1) }), interactive: false }).addTo(areaLayer));
+    }
+    f.rects.forEach(r => { L.rectangle([[r.b.south, r.b.west], [r.b.north, r.b.east]], { color: '#C2410C', weight: 2, fillColor: '#C2410C', fillOpacity: 0.12 }).addTo(areaLayer); L.marker([(r.b.north + r.b.south) / 2, (r.b.west + r.b.east) / 2], { icon: L.divIcon({ className: 'area-lbl', html: r.b.label }), interactive: false }).addTo(areaLayer); });
+    const w = f.xmax - f.xmin, h = f.ymax - f.ymin;
+    if (f.poly || f.rects.length > 1) L.marker(f.toLL({ x: f.xmin, y: f.ymax }), { icon: L.divIcon({ className: 'area-lbl', html: 'Area ' + f.areaNm2.toFixed(0) + ' sq nm' }), interactive: false }).addTo(areaLayer);
+    const parts = []; if (f.poly) parts.push(f.poly.length + ' corner' + (f.poly.length < 4 ? 's (three so far)' : 's')); if (f.rects.length) parts.push(f.rects.length + ' grid quadrant' + (f.rects.length > 1 ? 's' : ''));
+    $('areaInfo').innerHTML = '<b>' + f.areaNm2.toFixed(1) + ' square nm</b> from ' + parts.join(' and ') + (f.poly && f.rects.length ? ' (any overlap is counted twice)' : '') + '. Spans about ' + w.toFixed(1) + ' nm east-west by ' + h.toFixed(1) + ' nm north-south.';
+  }
+  // Clip the line y = c (or x = c) to the polygon; returns [min, max] along the line or null.
+  function clipLine(poly, c, horiz) {
+    const hits = [];
+    for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; const a1 = horiz ? a.y : a.x, b1 = horiz ? b.y : b.x, a2 = horiz ? a.x : a.y, b2 = horiz ? b.x : b.y; if (a1 === b1) continue; if ((a1 - c) * (b1 - c) > 0) continue; hits.push(a2 + (c - a1) * (b2 - a2) / (b1 - a1)); }
+    if (hits.length < 2) return null; return [Math.min(...hits), Math.max(...hits)];
+  }
+  // All covered intervals along the line y = c (horiz) or x = c, merged: the corner polygon plus every selected quadrant.
+  function coveredIntervals(f, c, horiz) {
+    const iv = [];
+    if (f.poly && f.poly.length >= 3) { const r = clipLine(f.poly, c, horiz); if (r) iv.push(r); }
+    f.rects.forEach(r => { if (horiz ? (c >= r.y1 && c <= r.y2) : (c >= r.x1 && c <= r.x2)) iv.push(horiz ? [r.x1, r.x2] : [r.y1, r.y2]); });
+    iv.sort((a, b) => a[0] - b[0]); const out = [];
+    iv.forEach(r => { const l = out[out.length - 1]; if (l && r[0] <= l[1] + 0.01) l[1] = Math.max(l[1], r[1]); else out.push([r[0], r[1]]); });
+    return out.filter(r => r[1] - r[0] >= 0.05);
+  }
+  function areaPattern() {
+    const f = areaFrame(); if (!f || (f.poly && f.poly.length < 4 && !f.rects.length)) { toast('Enter all four corners or select grid quadrants first.'); return; }
+    if (f.poly && f.poly.length < 4) f.poly = null;
+    const S = parseFloat($('areaSp').value), horiz = $('areaDir').value === 'ew';
+    const pts = []; let i = 0;
+    if (horiz) { for (let y = f.ymax - S / 2; y > f.ymin; y -= S, i++) { const ivs = coveredIntervals(f, y, true); if (!ivs.length) continue; const segs = ivs.map(r => [{ x: r[0], y }, { x: r[1], y }]); if (i % 2) segs.reverse(); segs.forEach(sg => pts.push(...(i % 2 ? [sg[1], sg[0]] : sg))); } }
+    else { for (let x = f.xmin + S / 2; x < f.xmax; x += S, i++) { const ivs = coveredIntervals(f, x, false); if (!ivs.length) continue; const segs = ivs.map(r => [{ x, y: r[1] }, { x, y: r[0] }]).reverse(); if (i % 2) segs.reverse(); segs.forEach(sg => pts.push(...(i % 2 ? [sg[1], sg[0]] : sg))); } }
+    if (!pts.length) { toast('The area is narrower than the spacing.'); return; }
+    insertAt(pts.map((q, n) => { const ll = f.toLL(q); return { name: 'Area ' + (n + 1), lat: ll[0], lon: ll[1] }; }));
+    $('patSpacing').value = S; $('patType').value = 'parallel'; podUpdate(); render({ fit: true });
+    toast(pts.length / 2 + ' leg segments at ' + S + ' nm spacing, ' + (pts.reduce((d, q, n) => n ? d + Math.hypot(q.x - pts[n - 1].x, q.y - pts[n - 1].y) : 0, 0)).toFixed(0) + ' nm total.');
+    podToForm();
+  }
+  $('cornerList').addEventListener('change', e => { const inp = e.target.closest('input[id^="ac"]'); if (!inp) return; const i = +inp.id.slice(2); const c = parseCorner(inp.value); areaSetCorner(i, c); });
+  $('cornerList').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.target.blur(); const nx = $('ac' + (+e.target.id.slice(2) + 1)); if (nx) nx.focus(); } });
+  $('cornerList').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.acmap !== undefined) { areaTapIdx = +b.dataset.acmap; setMapMode('area', 'Tap corner ' + (areaTapIdx + 1) + ' on the map'); return; }
+    if (b.dataset.acgps !== undefined) { const i = +b.dataset.acgps; if (!navigator.geolocation) { toast('GPS is not available in this browser.'); return; } b.textContent = '...'; navigator.geolocation.getCurrentPosition(pos => { areaSetCorner(i, { lat: pos.coords.latitude, lon: pos.coords.longitude, text: fmtPos([pos.coords.latitude, pos.coords.longitude]), label: 'GPS ±' + Math.round(pos.coords.accuracy) + ' m' }); }, err => { b.textContent = 'GPS'; toast('Could not get position: ' + err.message); }, { enableHighAccuracy: true, timeout: 10000 }); }
+  });
+  $('areaDrawBtn').addEventListener('click', () => { [0, 1, 2, 3].forEach(i => { const v = $('ac' + i).value; if (v.trim()) area[i] = parseCorner(v); else area[i] = null; }); renderCorners(); drawArea(); autosave(); const f = areaFrame(); if (f) map.fitBounds(L.latLngBounds([f.toLL({ x: f.xmin, y: f.ymin }), f.toLL({ x: f.xmax, y: f.ymax })]).pad(0.2)); else toast('Enter at least three corners or select grid quadrants.'); });
+  $('areaClearBtn').addEventListener('click', async () => { if (areaPts().length && !await ask('Clear the search area corners?')) return; area = [null, null, null, null]; renderCorners(); renderGq(); drawArea(); autosave(); });
+  $('areaWpBtn').addEventListener('click', () => { const f = areaFrame(); if (!f || !f.poly) { toast('Enter at least three corners first.'); return; } insertAt(f.poly.map(q => ({ name: 'Corner ' + (area.indexOf(q.c) + 1), lat: q.c.lat, lon: q.c.lon }))); render({ fit: true }); toast(f.poly.length + ' corners added as waypoints.'); });
+  $('areaPatBtn').addEventListener('click', areaPattern);
+  renderCorners(); renderGq();
 
   // ---------- SAR patterns ----------
   const PAT_HELP = {
@@ -1620,7 +1753,7 @@ function wmmDeclination(lat, lon, altKm, year) {
 
   // ---------- Session ----------
   let saveTimer;
-  function autosave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => sessionSet({ v: 3, saved: Date.now(), plan, track: track.slice(-20000), selected, reported, found, times, f104, poiLayers: poiLayers.map(l => ({ id: l.id, name: l.name, visible: l.visible, points: l.points })), sim: { beacon: sim.beacon, ac: sim.ac ? { lat: sim.ac.lat, lon: sim.ac.lon, hdg: sim.ac.hdg } : null, settings: Object.fromEntries(['bcnFreq', 'bcnRange', 'errBias', 'errJitter', 'errBounceP', 'errBounceM', 'simGs', 'simRate'].map(id => [id, $(id).value])), show: $('bcnShow').checked, rx, errOn: $('errOn').checked }, readings: readings.map(r => ({ ...r, time: r.time.toISOString() })), nextId }).then(() => { $('saveBadge').textContent = readings.length ? 'saved ' + new Date().toTimeString().slice(0, 5) : ''; $('saveBadge').className = 'badge ok'; }), 200); }
+  function autosave() { clearTimeout(saveTimer); saveTimer = setTimeout(() => sessionSet({ v: 3, saved: Date.now(), plan, area, gridSel, track: track.slice(-20000), selected, reported, found, times, f104, poiLayers: poiLayers.map(l => ({ id: l.id, name: l.name, visible: l.visible, points: l.points })), sim: { beacon: sim.beacon, ac: sim.ac ? { lat: sim.ac.lat, lon: sim.ac.lon, hdg: sim.ac.hdg } : null, settings: Object.fromEntries(['bcnFreq', 'bcnRange', 'errBias', 'errJitter', 'errBounceP', 'errBounceM', 'simGs', 'simRate'].map(id => [id, $(id).value])), show: $('bcnShow').checked, rx, errOn: $('errOn').checked }, readings: readings.map(r => ({ ...r, time: r.time.toISOString() })), nextId }).then(() => { $('saveBadge').textContent = readings.length ? 'saved ' + new Date().toTimeString().slice(0, 5) : ''; $('saveBadge').className = 'badge ok'; }), 200); }
   async function restoreSession() {
     let d = null; try { d = await sessionGet(); } catch (e) {}
     if (d) {
@@ -1628,6 +1761,7 @@ function wmmDeclination(lat, lon, altKm, year) {
       reported = d.reported || null; found = d.found || null; if (d.times) times = d.times; foundFill(); renderTimes(); if (d.f104) { Object.assign(f104, d.f104); ['f_podP', 'f_podA', 'f_tIn', 'f_tTotal'].forEach(id => { if (f104[id]) f104Auto[id.replace('f_', '')] = false; }); f104Load(); } readings = (d.readings || []).map(r => ({ ...r, time: new Date(r.time) })); nextId = d.nextId || (readings.length ? Math.max(...readings.map(r => r.id)) + 1 : 1);
       if (reported) { fillParts('rep', reported[0], 'repFmt'); fillParts('rlon', reported[1], 'repFmt'); }
       poiLayers = d.poiLayers || []; renderPoi();
+      if (Array.isArray(d.area)) area = [0, 1, 2, 3].map(i => d.area[i] || null); if (Array.isArray(d.gridSel)) gridSel = d.gridSel.slice(); renderCorners(); renderGq(); drawArea();
       if (d.sim) { sim.beacon = d.sim.beacon || null; sim.ac = d.sim.ac ? { ...d.sim.ac, gs: 0, trk: d.sim.ac.hdg } : null; if (d.sim.settings) Object.entries(d.sim.settings).forEach(([id, v]) => { if ($(id)) $(id).value = v; }); $('bcnShow').checked = d.sim.show !== false; if (d.sim.rx) rx = d.sim.rx; $('errOn').checked = d.sim.errOn !== false; $('simGsTxt').textContent = $('simGs').value; $('simRateTxt').textContent = $('simRate').value + 'x'; renderSim(); }
       srepFill();
     }
@@ -2662,7 +2796,7 @@ function wmmDeclination(lat, lon, altKm, year) {
   ['fmt', 'entryFmt', 'crsRef', 'gs'].forEach(id => $(id).addEventListener('change', () => { try { localStorage.setItem('fp-' + id, $(id).value); } catch (e) {} }));
   applyUiSize(); applyKeypadMode(); applyFmt('entryFmt'); applyFmt('dfFmt'); applyFmt('repFmt'); patFieldVis(); podUpdate();
   // mode
-  function setMode(m) { document.body.dataset.mode = m; if (m !== 'sim' && document.body.classList.contains('becker-only')) setBeckerOnly(false); document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); hideKeypad(); if (mapMode) setMapMode(null); }
+  function setMode(m) { document.body.dataset.mode = m; { const a = $('areaFold'); if (m === 'df') $('repFold').after(a); else if (m === 'plan') $('planFold').after(a); } if (m !== 'sim' && document.body.classList.contains('becker-only')) setBeckerOnly(false); document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); hideKeypad(); if (mapMode) setMapMode(null); }
   $('modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
   $('undoBtn').addEventListener('click', undo); $('redoBtn').addEventListener('click', redo); $('undoAllBtn').addEventListener('click', undoAll);
   // DF
