@@ -46,10 +46,18 @@
   .seg button.on { background: var(--ink); color: #fff; }
   .hbtn { font-size: 15px; padding: 6px 9px; border-radius: 8px; }
   .hbtn#undoAllBtn { font-size: 12px; }
-  body[data-mode="plan"] .mode-df, body[data-mode="plan"] .mode-sim { display: none !important; }
+  .status { flex-wrap: wrap; row-gap: 4px; gap: 6px; }
+  #net { font-size: 11px; }
+  .hbtn#undoBtn, .hbtn#redoBtn { padding: 6px 7px; }
+  .hbtn#hdrGps { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+  .hbtn#hdrGps.on { background: #E6F4EA; border-color: #1E8E3E; color: #1E8E3E; }
+  body[data-mode="plan"] .mode-sim { display: none !important; }
   body[data-mode="df"] .mode-plan, body[data-mode="df"] .mode-sim { display: none !important; }
   body[data-mode="sim"] .mode-plan, body[data-mode="sim"] .mode-df, body[data-mode="sim"] .mode-f104 { display: none !important; }
-  body[data-mode="sim"] .mode-pd, body[data-mode="f104"] .mode-pd { display: none !important; }
+  body[data-mode="sim"] .mode-pd, body[data-mode="f104"] .mode-pd, body[data-mode="set"] .mode-pd { display: none !important; }
+  body[data-mode="set"] .mode-plan, body[data-mode="set"] .mode-df, body[data-mode="set"] .mode-sim, body[data-mode="set"] .mode-f104 { display: none !important; }
+  body:not([data-mode="set"]) .mode-set { display: none !important; }
+  .seg button[data-mode="set"] { font-size: 17px; padding: 4px 12px; }
   body[data-mode="plan"] .mode-f104, body[data-mode="df"] .mode-f104 { display: none !important; }
   body[data-mode="f104"] .mode-plan, body[data-mode="f104"] .mode-df, body[data-mode="f104"] .mode-sim { display: none !important; }
   .f104 input[type=text], .f104 input.num { font-size: 14px; }
@@ -278,9 +286,12 @@
 <aside>
   <div id="divider" title="Drag to resize"></div>
   <header>
-    <div class="seg" id="modeSeg"><button data-mode="plan" class="on">Planner</button><button data-mode="df">DF</button><button data-mode="sim">Sim</button><button data-mode="f104">104a</button></div>
+    <div class="seg" id="modeSeg"><button data-mode="plan" class="on">Mission</button><button data-mode="sim">Sim</button><button data-mode="f104">104a</button><button data-mode="set" title="Settings and offline maps">&#9881;</button></div>
     <div class="status">
-      <span id="net"><span class="dot"></span>Online</span>
+      <span id="net" title="Online"><span class="dot"></span></span>
+      <button class="hbtn" id="hdrGps" title="Turn GPS tracking on or off"><span class="dot off"></span>GPS</button>
+      <button class="hbtn" id="dimBtn" title="Dim the screen while tracking">&#9790;</button>
+      <span id="hdrClock" title="Current time, Zulu" style="font:600 12px ui-monospace,Menlo,monospace">--:--Z</span>
       <button class="hbtn" id="undoBtn" title="Undo" disabled>&#8630;</button><button class="hbtn" id="redoBtn" title="Redo" disabled>&#8631;</button><button class="hbtn" id="undoAllBtn" title="Undo all changes since opening" disabled>Undo all</button><button class="hbtn" id="hideBtn" title="Hide the panel">Hide</button>
     </div>
   </header>
@@ -367,10 +378,10 @@
       <div class="actions"><button id="fitBtn">Fit map to fixes</button><button id="clearBtn">Clear all</button></div>
     </details>
 
-    <details class="fold mode-df" id="timesFold">
+    <details class="fold" id="timesFold" style="display:none">
       <summary>Mission times <span class="badge" id="timesBadge"></span></summary>
       <div id="timesList"></div>
-      <div class="hint" style="margin-top:8px">Tap Mark to record the current time. Tap a recorded time to edit it (HH:MM, local). Times are saved with the DF log.</div>
+      <div class="hint" id="timesHint" style="margin-top:8px"></div>
     </details>
 
     <details class="fold mode-df" id="foundFold">
@@ -390,7 +401,7 @@
       <div class="preview" id="foundStat">Not set.</div>
     </details>
 
-    <details class="fold mode-df" id="dfSetFold">
+    <details class="fold mode-set" id="dfSetFold">
       <summary>DF settings</summary>
       <div class="group">
         <h3>Heading and variation</h3>
@@ -458,12 +469,12 @@
         <div style="display:flex;align-items:flex-end"><button id="simPlaceBtn" style="width:100%">Place aircraft</button></div>
       </div>
       <div class="actions"><button id="simClearReadBtn">Clear logged readings</button><button id="simResetBtn" style="color:var(--sar)">Reset simulator</button></div>
-      <div class="hint" style="margin-top:8px">Log a reading whenever you like on 121.5, or during the three seconds the bearing is displayed after a 406 burst. Each one records the aircraft position and heading with the exact bearing the Becker is showing, draws the line on the map, and adds a fix to the DF tab, where the crossings and the estimate build up just as they would on a real sortie. The plotted line uses the heading reference and variation setting from DF settings, so a wrong variation there shows up as a wrong line here, the same as in the aircraft. The aircraft can also be dragged to a new position on the map at any time. Hold the pad left or right to bank; the further you push, the steeper the bank, up to 30°. Turn rate and radius follow bank angle and airspeed, and the aircraft rolls in and out over a couple of seconds. Release to roll level.</div>
+      <div class="hint" style="margin-top:8px">Log a reading whenever you like on 121.5, or during the three seconds the bearing is displayed after a 406 burst. Each one records the aircraft position and heading with the exact bearing the Becker is showing, draws the line on the map, and adds a fix to the Mission tab, where the crossings and the estimate build up just as they would on a real sortie. The plotted line uses the heading reference and variation setting from DF settings, so a wrong variation there shows up as a wrong line here, the same as in the aircraft. The aircraft can also be dragged to a new position on the map at any time. Hold the pad left or right to bank; the further you push, the steeper the bank, up to 30°. Turn rate and radius follow bank angle and airspeed, and the aircraft rolls in and out over a couple of seconds. Release to roll level.</div>
     </details>
 
     <details class="fold mode-sim" id="scnFold">
       <summary>Scenario: reported location <span class="badge" id="scnBadge"></span></summary>
-      <div class="hint" style="margin-top:0">The last known position or the position mission base gives the crew before launch. It plots as the green Reported marker, the same one the DF tab uses, so the crew has a place to head for. The beacon does not have to be there.</div>
+      <div class="hint" style="margin-top:0">The last known position or the position mission base gives the crew before launch. It plots as the green Reported marker, the same one the Mission tab uses, so the crew has a place to head for. The beacon does not have to be there.</div>
       <div class="row">
         <div><label for="srepFmt">Format</label><select id="srepFmt"><option value="dd">DD.DDDDD°</option><option value="ddm">DD° MM.MMM'</option><option value="dms">DD° MM' SS"</option></select></div>
         <div class="row" style="margin:0">
@@ -540,7 +551,7 @@
       </div>
       <div class="row">
         <div><label for="f_cfmt">Corner format</label><select id="f_cfmt"><option value="dd">DD.DDDDD°</option><option value="ddm">DD° MM.MMM'</option><option value="dms">DD° MM' SS"</option></select></div>
-        <div style="display:flex;align-items:flex-end"><button id="f_cornersBtn" style="width:100%">Fill corners from flight plan</button></div>
+        <div style="display:flex;align-items:flex-end"><button id="f_cornersBtn" style="width:100%">Fill corners from Search area or plan</button></div>
       </div>
       <div class="pa"><div class="h">Corner</div><div class="h">Latitude</div><div class="h">Longitude</div>
         <div>Northwest</div><input type="text" id="f_nwLat" autocomplete="off"><input type="text" id="f_nwLon" autocomplete="off">
@@ -571,7 +582,7 @@
     <details class="fold mode-f104 f104" id="f104TimesFold">
       <summary>Times</summary>
       <div class="tms">
-        <div class="h">Event</div><div class="h">Time</div><div></div>
+        <div class="h">Event</div><div class="h" id="f_tzHead">Time (Z)</div><div></div>
         <div>Engine on</div><input type="text" id="f_engOn" placeholder="HH:MM" autocomplete="off"><button class="mini" data-mark="f_engOn">Mark</button>
         <div>Wheels up</div><input type="text" id="f_wheelsUp" placeholder="HH:MM" autocomplete="off"><button class="mini" data-mark="f_wheelsUp">Mark</button>
         <div>Time started search</div><input type="text" id="f_tStart" placeholder="HH:MM" autocomplete="off"><button class="mini" data-mark="f_tStart">Mark</button>
@@ -583,9 +594,9 @@
         <div>Time from search area</div><input type="text" id="f_tFrom" placeholder="H:MM or min" autocomplete="off"><div></div>
         <div>Total sortie time</div><input type="text" id="f_tTotal" placeholder="auto" autocomplete="off"><div></div>
       </div>
-      <div class="actions"><button id="f_timesFromDf">Copy engine and wheels times from DF tab</button><button id="f_sortieBtn">Fill from the flown track</button></div>
+      <div class="actions"><button id="f_sortieBtn">Fill from the flown track</button></div>
       <div class="offbox" id="sortieBox" style="display:none;margin-top:8px"></div>
-      <div class="hint" style="margin-top:8px">Engine and wheels times stay in step with the DF tab's Mission times panel in both directions. Time in search area and total sortie time fill themselves from the start, end, engine on, and engine off times when those are present; overtype them if needed.</div>
+      <div class="hint" style="margin-top:8px">Times are recorded in Zulu (switch to local under Settings). Tap Mark for the current time, or type one. Wheels up and down, and entry and exit from the Search area, are also filled from the GPS when tracking is on. Time in search area and total sortie time fill themselves from the other entries when those boxes are blank.</div>
     </details>
 
     <details class="fold mode-f104 f104" id="f104RemarksFold">
@@ -615,6 +626,7 @@
       <div class="actions wrap" style="margin-top:0">
         <button id="tapAddBtn">Add points by tapping map</button>
         <button id="gpsAddBtn">Add current GPS position</button>
+        <button id="nearBtn">Nearest airports</button>
         <button id="reverseBtn">Reverse plan</button>
         <button id="clearPlanBtn" style="color:var(--sar)">Clear plan</button>
       </div>
@@ -622,6 +634,7 @@
         <div><label for="aptQ">Add airport, CAP grid, or coordinates</label><input type="text" id="aptQ" placeholder="KFPR, MIA 123B, or 27.45 -80.35" autocomplete="off" autocapitalize="characters"></div>
         <div><button id="aptAddBtn" class="primary" style="width:auto">Add</button></div>
       </div>
+      <div id="nearList" class="aptlist"></div>
       <div id="aptList" class="aptlist"></div>
       <div class="hint" id="aptHint">Airport identifiers or names (public-use US airports, built in and offline), a CAP grid such as MIA 123 or MIA 123B, or coordinates in decimal degrees, degrees and minutes, or degrees minutes seconds. Press Return or tap a result to add it where "Place it" says. A grid can also be added as a complete parallel track pattern.</div>
       <div id="wpList" class="empty" style="margin-top:10px">No waypoints yet. Tap the map, add an airport, enter coordinates below, or import a KML file.</div>
@@ -725,19 +738,20 @@
       <div class="hint" style="margin-top:8px">Patterns are inserted as ordinary waypoints after the start point, so they can be edited, dragged, and exported like anything else. The start point itself is reused if it is already in the plan.</div>
     </details>
 
-    <details class="fold mode-plan" id="gpsFold">
+    <details class="fold mode-set" id="gpsFold">
       <summary>GPS and tracks <span class="badge" id="gpsBadge"></span></summary>
-      <label class="switch"><span>Record flown track<small>Logs the GPS position every few seconds. Keeps the screen awake while on, since iPadOS stops GPS for web apps when the screen is off. Use Dim screen to save power.</small></span><input type="checkbox" id="recTrack"></label>
+      <div class="hint" id="gpsTopHint">GPS on and off, Dim screen, and Nearest airports are in the top bar and the Flight plan panel so they are reachable in flight; this panel holds the settings.</div>
+      <label class="switch"><span>GPS tracking (same as the GPS button in the top bar)<small>Logs the GPS position every few seconds. Keeps the screen awake while on, since iPadOS stops GPS for web apps when the screen is off. Use Dim screen to save power.</small></span><input type="checkbox" id="recTrack"></label>
+      <label class="switch"><span>Turn GPS on when the app opens<small>Off by default to save battery while planning. Turn on for mission days so tracking starts without a tap.</small></span><input type="checkbox" id="gpsAutoStart"></label>
       <label class="switch"><span>Detect wheels up and down automatically<small>Groundspeed above 45 kt for a few seconds marks wheels up; below 30 kt for half a minute after flying marks wheels down. Fills the mission times and the 104a.</small></span><input type="checkbox" id="autoWheels" checked></label>
+      <label class="switch"><span>Detect search area entry and exit<small>Records Entered and Left search area on the 104a when the GPS crosses the Search area boundary (corners or grid quadrants).</small></span><input type="checkbox" id="autoArea" checked></label>
       <label class="switch"><span>Follow aircraft on map<small>Keeps the map centered on the current position.</small></span><input type="checkbox" id="followShip"></label>
       <label>Range rings around the aircraft (nm)</label>
       <div class="chips" id="ringChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
-      <div class="actions" style="margin-top:0"><button id="dimBtn">Dim screen</button></div>
       <label class="switch"><span><span class="swatch" style="background:var(--route)"></span>Show planned route</span><input type="checkbox" id="showPlan" checked></label>
       <label class="switch"><span><span class="swatch" style="background:var(--track)"></span>Show flown track</span><input type="checkbox" id="showTrack" checked></label>
       <div class="offbox" id="gpsStatus">GPS idle.</div>
-      <div class="actions"><button id="nearBtn">Nearest airports</button><button id="fitTrackBtn">Fit map to track</button><button id="clearTrackBtn" style="color:var(--sar)">Clear flown track</button></div>
-      <div id="nearList" class="aptlist" style="margin-top:8px"></div>
+      <div class="actions"><button id="fitTrackBtn">Fit map to track</button><button id="clearTrackBtn" style="color:var(--sar)">Clear flown track</button></div>
       <div class="row" style="margin-top:10px"><div><label for="gpsAltOff">GPS altitude correction (ft)</label><input class="num" id="gpsAltOff" inputmode="none" value="0" autocomplete="off"></div><div class="hint" style="align-self:end">Added to the iPad's reported altitude. iPadOS reports height above mean sea level, so 0 is normal; set it if your readings disagree with the altimeter.</div></div>
     </details>
 
@@ -757,12 +771,13 @@
       <div class="actions"><button id="newMissionBtn" style="color:var(--sar)">Clear saved plan and track</button></div>
     </details>
 
-    <details class="fold" id="setFold">
+    <details class="fold mode-set" id="setFold" open>
       <summary>Settings</summary>
       <div class="group">
         <h3>Navigation</h3>
         <div class="row">
-          <div><label for="gs">Planning groundspeed (kt)</label><input class="num" id="gs" inputmode="none" value="100" autocomplete="off"></div>
+          <div><label for="timeRef">Mission times</label><select id="timeRef"><option value="z">Zulu (UTC)</option><option value="l">Local</option></select></div>
+        <div><label for="gs">Planning groundspeed (kt)</label><input class="num" id="gs" inputmode="none" value="100" autocomplete="off"></div>
           <div><label for="crsRef">Show courses as</label><select id="crsRef"><option value="mag">Magnetic</option><option value="true">True</option></select></div>
         </div>
         <div class="hint">Magnetic courses use the World Magnetic Model 2025 at the start of each leg.</div>
@@ -787,7 +802,7 @@
       </div>
     </details>
 
-    <details class="fold" id="offFold">
+    <details class="fold mode-set" id="offFold">
       <summary>Offline maps <span class="badge" id="offBadge"></span></summary>
       <div class="offbox" id="offStatus">Checking stored maps...</div>
       <div class="row">
@@ -1088,21 +1103,29 @@ function wmmDeclination(lat, lon, altKm, year) {
   let watchId = null, lastPos = null;
   let readings = [], nextId = 1, reported = null, editingId = null, pendingTime = null, posFromGps = false;
   let found = null, times = { engOn: null, wheelsUp: null, wheelsDown: null, engOff: null };
-  const TIME_KEYS = [['engOn', 'Engine on'], ['wheelsUp', 'Wheels up'], ['wheelsDown', 'Wheels down'], ['engOff', 'Engine off']];
+  const TIME_KEYS = [['engOn', 'Engine on'], ['wheelsUp', 'Wheels up'], ['wheelsDown', 'Wheels down'], ['engOff', 'Engine off'], ['inArea', 'Entered search area'], ['outArea', 'Left search area']];
+  const TIME_ORDER = ['engOn', 'wheelsUp', 'inArea', 'outArea', 'wheelsDown', 'engOff'];
+  // Mission times are recorded in Zulu unless switched to local in Settings.
+  let zulu = true; try { zulu = localStorage.getItem('fp-zulu') !== '0'; } catch (e) {}
+  const stampOf = d => zulu ? String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0') : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const nowStamp = () => stampOf(new Date());
+  const tzLabel = () => zulu ? 'Z' : 'local';
   const dfLayer = L.layerGroup().addTo(map);
   let lastEstimate = null; const currentEstimate = () => lastEstimate;
   const EMPTY_EST = '<div class="empty">Enter at least two readings from different positions. Bearing lines and their intersections will appear on the map, and the estimated beacon location will show here.</div>';
 
   // ---------- Undo / redo ----------
-  const snap = () => JSON.stringify({ plan, reported, found, times, readings: readings.map(r => ({ ...r, time: r.time.toISOString() })), nextId });
+  const snap = () => JSON.stringify({ plan, area, gridSel: (typeof gridSel === 'undefined' ? [] : gridSel), reported, found, times, readings: readings.map(r => ({ ...r, time: r.time.toISOString() })), nextId });
   let hPast = [], hFuture = [], baseline = null, lastSnap = null;
   function applySnap(s) {
     const d = JSON.parse(s);
-    plan = d.plan || []; reported = d.reported || null; found = d.found || null; times = d.times || { engOn: null, wheelsUp: null, wheelsDown: null, engOff: null }; readings = (d.readings || []).map(r => ({ ...r, time: new Date(r.time) })); nextId = d.nextId || (readings.length ? Math.max(...readings.map(r => r.id)) + 1 : 1);
+    plan = d.plan || []; reported = d.reported || null; found = d.found || null; times = d.times || {}; TIME_KEYS.forEach(([k]) => { if (!(k in times)) times[k] = null; });
+    if (typeof area !== 'undefined') { area = Array.isArray(d.area) ? [0, 1, 2, 3].map(i => d.area[i] || null) : [null, null, null, null]; gridSel = Array.isArray(d.gridSel) ? d.gridSel.slice() : []; renderCorners(); renderGq(); drawArea(); }
+    syncTimesTo104(); readings = (d.readings || []).map(r => ({ ...r, time: new Date(r.time) })); nextId = d.nextId || (readings.length ? Math.max(...readings.map(r => r.id)) + 1 : 1);
     if (selected >= plan.length) selected = plan.length - 1; foundFill(); renderTimes();
     stopEdit(); stopDfEdit();
     if (reported) { fillParts('rep', reported[0], 'repFmt'); fillParts('rlon', reported[1], 'repFmt'); } else ['repD', 'repM', 'repS', 'rlonD', 'rlonM', 'rlonS'].forEach(id => $(id).value = '');
-    lastSnap = s; render(); renderDF();
+    lastSnap = snap(); render(); renderDF();
   }
   function commit() {
     const s = snap();
@@ -1301,18 +1324,20 @@ function wmmDeclination(lat, lon, altKm, year) {
   function renderCorners() {
     $('cornerList').innerHTML = [0, 1, 2, 3].map(i => { const c = area[i]; return '<div style="margin-bottom:8px"><label>Corner ' + (i + 1) + '</label><div class="cornerRow"><input type="text" id="ac' + i + '" placeholder="Coordinates or MIA 123B NW" autocomplete="off" autocapitalize="characters" value="' + esc(c && c.text || '') + '"><button data-acmap="' + i + '">Map</button><button data-acgps="' + i + '">GPS</button></div><div class="hint" id="acs' + i + '" style="margin-top:3px">' + (c ? (c.err ? '<span style="color:var(--sar)">' + esc(c.err) + '</span>' : fmtPos([c.lat, c.lon]) + (c.label ? ' · ' + esc(c.label) : '')) : '') + '</div></div>'; }).join('');
   }
-  function areaSetCorner(i, c) { area[i] = c; renderCorners(); renderGq(); drawArea(); autosave(); }
+  function areaSetCorner(i, c) { area[i] = c; renderCorners(); renderGq(); drawArea(); autosave(); commit(); }
   function areaPts() { return area.filter(c => c && !c.err); }
   // Selected CAP grid quadrants, kept as ids like "MIA 123B".
   function gqBounds(id) { const m = id.match(/^([A-Z]{3}) (\d+)([ABCD])$/); return m ? gridBounds(m[1], +m[2], m[3]) : null; }
-  function gqToggle(id) { const i = gridSel.indexOf(id); if (i >= 0) gridSel.splice(i, 1); else gridSel.push(id); renderGq(); drawArea(); autosave(); }
+  function gqToggle(id) { const i = gridSel.indexOf(id); if (i >= 0) gridSel.splice(i, 1); else gridSel.push(id); renderGq(); drawArea(); autosave(); commit(); }
   function gqAddText(t) {
     const m = (t || '').trim().toUpperCase().match(/^([A-Z]{3})[ -]*(\d{1,3})[ -]*([ABCD]{1,4})?$/); if (!m) { toast('Enter a grid like MIA 123B, or MIA 123 for all four quadrants.'); return; }
     if (!gridBounds(m[1], +m[2], '')) { toast('No grid ' + m[1] + ' ' + m[2] + ' on that chart.'); return; }
     const quads = (m[3] || 'ABCD').split(''); let added = 0;
     quads.forEach(q => { const id = m[1] + ' ' + m[2] + q; if (!gridSel.includes(id)) { gridSel.push(id); added++; } });
-    renderGq(); drawArea(); autosave(); toast(added ? added + ' quadrant' + (added > 1 ? 's' : '') + ' added.' : 'Already in the area.');
+    renderGq(); drawArea(); autosave(); commit(); toast(added ? added + ' quadrant' + (added > 1 ? 's' : '') + ' added.' : 'Already in the area.');
   }
+  // "MIA 123" when all four quadrants of a grid are selected, otherwise the quadrants.
+  function gqSummary() { const by = {}; gridSel.forEach(id => { const g = id.slice(0, -1); (by[g] = by[g] || []).push(id.slice(-1)); }); return Object.keys(by).sort().map(g => by[g].length === 4 ? g : by[g].sort().map(q => g + q).join(', ')).join(', '); }
   function renderGq() {
     const el = $('gqList'); const sorted = gridSel.slice().sort();
     el.innerHTML = sorted.length ? sorted.map(id => '<span class="gq-chip">' + esc(id) + '<button data-gq="' + esc(id) + '" title="Remove">×</button></span>').join('') + '<div style="margin-top:2px">' + sorted.length + ' quadrant' + (sorted.length > 1 ? 's' : '') + ', about ' + (sorted.length * 7.5 * 7.5 * Math.cos(toRad(gqBounds(sorted[0]).north))).toFixed(0) + ' sq nm</div>' : 'No quadrants selected.';
@@ -1321,7 +1346,7 @@ function wmmDeclination(lat, lon, altKm, year) {
   $('gqAddBtn').addEventListener('click', () => { gqAddText($('gqIn').value); $('gqIn').value = ''; });
   $('gqIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); gqAddText($('gqIn').value); $('gqIn').value = ''; } });
   $('gqMapBtn').addEventListener('click', () => { if (mapMode === 'gridsel') { setMapMode(null); return; } if (!$('capGrid').checked) { $('capGrid').checked = true; $('capGrid').dispatchEvent(new Event('change')); } setMapMode('gridsel', 'Tap grid quadrants to add or remove them'); });
-  $('gqClearBtn').addEventListener('click', async () => { if (gridSel.length && !await ask('Remove all ' + gridSel.length + ' selected quadrants?')) return; gridSel = []; renderGq(); drawArea(); autosave(); });
+  $('gqClearBtn').addEventListener('click', async () => { if (gridSel.length && !await ask('Remove all ' + gridSel.length + ' selected quadrants?')) return; gridSel = []; renderGq(); drawArea(); autosave(); commit(); });
   $('gqList').addEventListener('click', e => { const b = e.target.closest('button[data-gq]'); if (b) gqToggle(b.dataset.gq); });
   // Local planar frame in nm around the area centroid; corners ordered around the centroid so the outline never crosses itself.
   function areaFrame() {
@@ -1384,8 +1409,8 @@ function wmmDeclination(lat, lon, altKm, year) {
     if (b.dataset.acmap !== undefined) { areaTapIdx = +b.dataset.acmap; setMapMode('area', 'Tap corner ' + (areaTapIdx + 1) + ' on the map'); return; }
     if (b.dataset.acgps !== undefined) { const i = +b.dataset.acgps; if (!navigator.geolocation) { toast('GPS is not available in this browser.'); return; } b.textContent = '...'; navigator.geolocation.getCurrentPosition(pos => { areaSetCorner(i, { lat: pos.coords.latitude, lon: pos.coords.longitude, text: fmtPos([pos.coords.latitude, pos.coords.longitude]), label: 'GPS ±' + Math.round(pos.coords.accuracy) + ' m' }); }, err => { b.textContent = 'GPS'; toast('Could not get position: ' + err.message); }, { enableHighAccuracy: true, timeout: 10000 }); }
   });
-  $('areaDrawBtn').addEventListener('click', () => { [0, 1, 2, 3].forEach(i => { const v = $('ac' + i).value; if (v.trim()) area[i] = parseCorner(v); else area[i] = null; }); renderCorners(); drawArea(); autosave(); const f = areaFrame(); if (f) map.fitBounds(L.latLngBounds([f.toLL({ x: f.xmin, y: f.ymin }), f.toLL({ x: f.xmax, y: f.ymax })]).pad(0.2)); else toast('Enter at least three corners or select grid quadrants.'); });
-  $('areaClearBtn').addEventListener('click', async () => { if (areaPts().length && !await ask('Clear the search area corners?')) return; area = [null, null, null, null]; renderCorners(); renderGq(); drawArea(); autosave(); });
+  $('areaDrawBtn').addEventListener('click', () => { [0, 1, 2, 3].forEach(i => { const v = $('ac' + i).value; if (v.trim()) area[i] = parseCorner(v); else area[i] = null; }); renderCorners(); renderGq(); drawArea(); autosave(); commit(); const f = areaFrame(); if (f) map.fitBounds(L.latLngBounds([f.toLL({ x: f.xmin, y: f.ymin }), f.toLL({ x: f.xmax, y: f.ymax })]).pad(0.2)); else toast('Enter at least three corners or select grid quadrants.'); });
+  $('areaClearBtn').addEventListener('click', async () => { if (areaPts().length && !await ask('Clear the search area corners?')) return; area = [null, null, null, null]; renderCorners(); renderGq(); drawArea(); autosave(); commit(); });
   $('areaWpBtn').addEventListener('click', () => { const f = areaFrame(); if (!f || !f.poly) { toast('Enter at least three corners first.'); return; } insertAt(f.poly.map(q => ({ name: 'Corner ' + (area.indexOf(q.c) + 1), lat: q.c.lat, lon: q.c.lon }))); render({ fit: true }); toast(f.poly.length + ' corners added as waypoints.'); });
   $('areaPatBtn').addEventListener('click', areaPattern);
   renderCorners(); renderGq();
@@ -1573,14 +1598,37 @@ function wmmDeclination(lat, lon, altKm, year) {
       else fly.slowSince = null;
     }
   }
-  const hhmmOf = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const hhmmOf = stampOf;
+  // Header GPS button mirrors Record flown track.
+  function renderGpsBtn() { const on = $('recTrack').checked; $('hdrGps').classList.toggle('on', on); $('hdrGps').innerHTML = '<span class="dot' + (on ? '' : ' off') + '"></span>GPS ' + (on ? 'on' : 'off'); }
+  $('hdrGps').addEventListener('click', () => { $('recTrack').checked = !$('recTrack').checked; syncWatch(); renderGpsBtn(); toast($('recTrack').checked ? 'GPS tracking on. Position, track, and wheels times are being recorded.' : 'GPS tracking off.'); });
+  setInterval(() => { const d = new Date(); $('hdrClock').textContent = String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0') + 'Z'; }, 1000);
+  // Entry into and exit from the search area, from the GPS track.
+  let areaState = { inside: null, since: null };
+  function insideArea(lat, lon) {
+    const f = typeof areaFrame === 'function' ? areaFrame() : null; if (!f) return null;
+    const q = f.toXY({ lat, lon });
+    if (f.rects.some(r => q.x >= r.x1 && q.x <= r.x2 && q.y >= r.y1 && q.y <= r.y2)) return true;
+    if (f.poly && f.poly.length >= 3) { let inn = false; for (let i = 0, j = f.poly.length - 1; i < f.poly.length; j = i++) { const a = f.poly[i], b = f.poly[j]; if ((a.y > q.y) !== (b.y > q.y) && q.x < (b.x - a.x) * (q.y - a.y) / (b.y - a.y) + a.x) inn = !inn; } if (inn) return true; }
+    return false;
+  }
+  function autoArea(c, now) {
+    if (!$('autoArea').checked) return;
+    const inn = insideArea(c.latitude, c.longitude); if (inn === null) return;
+    const t = now.getTime();
+    if (areaState.inside === null) { areaState = { inside: inn, since: t }; return; }
+    if (inn !== areaState.inside) { areaState.since = areaState.since || t; if (t - areaState.since < 10000) return; areaState = { inside: inn, since: null };
+      if (inn && !times.inArea) { times.inArea = stampOf(now); renderTimes(); syncTimesTo104(); toast('Entered search area ' + times.inArea + (zulu ? 'Z' : '') + ' (from GPS).'); }
+      else if (!inn && times.inArea && !times.outArea) { times.outArea = stampOf(now); renderTimes(); syncTimesTo104(); toast('Left search area ' + times.outArea + (zulu ? 'Z' : '') + ' (from GPS).'); }
+    } else areaState.since = null;
+  }
   function syncTimesTo104() { if (typeof F_TIME_MAP !== 'undefined') Object.entries(F_TIME_MAP).forEach(([fid, k]) => { f104[fid] = times[k] || ''; if ($(fid)) $(fid).value = f104[fid]; }); if (typeof f104Compute === 'function') f104Compute(); autosave(); }
   function onPos(pos) {
     lastPos = pos; const c = pos.coords, now = new Date(pos.timestamp || Date.now());
     if ($('recTrack').checked) {
       const last = track[track.length - 1];
       if (!last || distanceNm(last.lat, last.lon, c.latitude, c.longitude) > 0.01 || now - last.t > 15000) { const pt = { t: now.getTime(), lat: c.latitude, lon: c.longitude }; if (c.altitude != null && !isNaN(c.altitude)) pt.alt = Math.round(c.altitude * 3.28084 + (parseFloat($('gpsAltOff').value) || 0)); if (c.speed != null && !isNaN(c.speed)) pt.kt = Math.round(c.speed * 1.94384); track.push(pt); renderTrack(); autosave(); }
-      autoWheels(c, now);
+      autoWheels(c, now); autoArea(c, now);
     }
     drawShip(pos);
     let line = fmtPos([c.latitude, c.longitude]) + ' at ' + now.toTimeString().slice(0, 8);
@@ -1598,6 +1646,7 @@ function wmmDeclination(lat, lon, altKm, year) {
       const near = APT.map(a => ({ a, d: distanceNm(lat, lon, a.lat, a.lon) })).sort((x, y) => x.d - y.d).slice(0, 3);
       const el = $('nearList'); el.className = 'aptlist show';
       el.innerHTML = near.map(({ a, d }, i) => { const mc = norm(bearingDeg([lat, lon], [a.lat, a.lon]) - v); return '<div><div class="txt"><b>' + esc(a.id) + '</b>' + esc(a.name) + '<br><small>' + d.toFixed(1) + ' nm, ' + pad3(mc) + '° M · ' + esc(a.city) + '</small></div><button class="mini" data-near="' + i + '">Add to plan</button></div>'; }).join('');
+      el.innerHTML += '<div style="cursor:default;justify-content:flex-end"><button class="mini" data-nearclose="1">Close</button></div>';
       el.dataset.list = JSON.stringify(near.map(x => x.a));
     };
     if (lastPos && Date.now() - lastPos.timestamp < 60000) { run(lastPos.coords.latitude, lastPos.coords.longitude); return; }
@@ -1606,14 +1655,14 @@ function wmmDeclination(lat, lon, altKm, year) {
     navigator.geolocation.getCurrentPosition(pos => { $('nearBtn').textContent = 'Nearest airports'; lastPos = pos; run(pos.coords.latitude, pos.coords.longitude); }, err => { $('nearBtn').textContent = 'Nearest airports'; toast('Could not get position: ' + err.message); }, { enableHighAccuracy: true, timeout: 10000 });
   }
   $('nearBtn').addEventListener('click', nearestAirports);
-  $('nearList').addEventListener('click', e => { const b = e.target.closest('button[data-near]'); if (!b) return; const a = JSON.parse($('nearList').dataset.list || '[]')[+b.dataset.near]; if (a) { insertAt([{ name: a.id, lat: a.lat, lon: a.lon }]); render({ fit: plan.length === 1 }); toast(a.id + ' added to the plan.'); } });
+  $('nearList').addEventListener('click', e => { if (e.target.closest('button[data-nearclose]')) { $('nearList').className = 'aptlist'; $('nearList').innerHTML = ''; return; } const b = e.target.closest('button[data-near]'); if (!b) return; const a = JSON.parse($('nearList').dataset.list || '[]')[+b.dataset.near]; if (a) { insertAt([{ name: a.id, lat: a.lat, lon: a.lon }]); render({ fit: plan.length === 1 }); toast(a.id + ' added to the plan.'); } });
   // Screen wake lock while recording, re-armed whenever the page comes back to the foreground
   let wakeLock = null;
   async function wake(on) {
     try { if (on && 'wakeLock' in navigator) { if (!wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) { wakeLock = null; }
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if ($('recTrack').checked) { wake(true); if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; } startWatch(); } } });
-  $('dimBtn').addEventListener('click', () => { if (!$('recTrack').checked) { toast('Turn on Record flown track first.'); return; } document.body.classList.add('dimmed'); });
+  $('dimBtn').addEventListener('click', () => { if (!$('recTrack').checked) { toast('Turn GPS on first (top bar).'); return; } document.body.classList.add('dimmed'); });
   $('dimOverlay').addEventListener('click', () => document.body.classList.remove('dimmed'));
   setInterval(() => { if (document.body.classList.contains('dimmed')) $('dimClock').textContent = new Date().toTimeString().slice(0, 5); }, 1000);
   function startWatch() {
@@ -1909,8 +1958,7 @@ function wmmDeclination(lat, lon, altKm, year) {
       pendingTime = null; posFromGps = false;
     }
     ['dlatM', 'dlatS', 'dlonM', 'dlonS', 'hdg', 'rel'].forEach(id => $(id).value = '');
-    $('listFold').open = true;
-    renderDF({ fit: true }); updatePreview();
+    renderDF({ fit: true }); updatePreview(); toast('Fix ' + (nextId - 1) + ' added.');
     focusField($('dlatM').offsetParent ? 'dlatM' : 'dlatD');
   }
   function startDfEdit(id) {
@@ -1963,7 +2011,7 @@ function wmmDeclination(lat, lon, altKm, year) {
       pts.push(p);
       L.circleMarker(p, { radius: 4, color: '#E8600A', fillColor: '#E8600A', fillOpacity: 0.7, weight: 1 }).addTo(dfLayer);
     }
-    const box = $('estimate');
+    const box = $('estimate'); box.parentElement.style.display = readings.length ? '' : 'none';
     lastEstimate = null;
     if (pts.length) {
       const est = [median(pts.map(p => p[0])), median(pts.map(p => p[1]))]; lastEstimate = est;
@@ -2020,7 +2068,7 @@ function wmmDeclination(lat, lon, altKm, year) {
     L2.push('ELT DF PLOTTER MISSION LOG'); L2.push('Exported ' + new Date().toString()); L2.push('');
     L2.push('Reported location: ' + (reported ? fmtPos(reported) : 'none'));
     L2.push('Beacon found at: ' + (found ? fmtPos(found) + (reported ? ' (' + dist(reported, found).toFixed(2) + ' nm from reported)' : '') : 'not recorded'));
-    L2.push('Times: ' + TIME_KEYS.map(([k, l]) => l + ' ' + (times[k] || '--:--')).join(', '));
+    L2.push('Times (' + (zulu ? 'Zulu' : 'local') + '): ' + TIME_ORDER.map(k => TIME_KEYS.find(x => x[0] === k)[1] + ' ' + (times[k] || '--:--')).join(', '));
     L2.push('Heading reference: ' + ($('hdgRef').value === 'mag' ? 'magnetic' : 'true') + ', variation ' + ($('autoVar').checked ? 'from World Magnetic Model 2025 per fix' : 'manual ' + fmtVar(parseFloat($('var').value) || 0)));
     L2.push(''); L2.push('READINGS');
     readings.forEach(r => L2.push('#' + r.id + '  ' + r.time.toISOString().replace('T', ' ').slice(0, 19) + 'Z  ' + fmtPos([r.lat, r.lon]) + '  hdg ' + pad3(r.hdg) + '  rel ' + pad3(r.rel) + '  var ' + fmtVar(readingVar(r)) + '  true ' + trueBearing(r).toFixed(1).padStart(5, '0') + (r.src === 'gps' ? '  [GPS]' : '') + (r.ground ? '  [ground DF]' : '') + (r.on ? '' : '  (hidden)')));
@@ -2064,7 +2112,7 @@ function wmmDeclination(lat, lon, altKm, year) {
     const refMag = $('hdgRef').value === 'mag';
     readings.push({ id: nextId++, time: gdfTime || new Date(), lat: gdf.lat, lon: gdf.lon, hdg: refMag ? gdf.magBrg : gdf.trueBrg, rel: 0, on: true, src: gdfFromGps ? 'gps' : 'manual', ground: true });
     gdfTime = null; gdfFromGps = false;
-    $('listFold').open = true; renderDF({ fit: true });
+    renderDF({ fit: true });
     toast('Ground DF bearing added as fix ' + (nextId - 1) + '.');
   }
   SIG.forEach(([id]) => $(id).addEventListener('input', gdfCompute));
@@ -2368,7 +2416,7 @@ function wmmDeclination(lat, lon, altKm, year) {
   $('simClearReadBtn').addEventListener('click', async () => {
     const n = readings.filter(r => r.simRead).length;
     if (!n) { toast('No simulator readings to clear.'); return; }
-    if (!await ask('Remove the ' + n + ' reading' + (n === 1 ? '' : 's') + ' logged from the simulator? Readings entered by hand in the DF tab are kept. This can be undone.')) return;
+    if (!await ask('Remove the ' + n + ' reading' + (n === 1 ? '' : 's') + ' logged from the simulator? Readings entered by hand in the Mission tab are kept. This can be undone.')) return;
     readings = readings.filter(r => !r.simRead); if (editingId !== null && !readings.some(r => r.id === editingId)) stopDfEdit();
     renderDF(); $('simReadBadge').textContent = ''; toast('Simulator readings cleared.');
   });
@@ -2420,13 +2468,15 @@ function wmmDeclination(lat, lon, altKm, year) {
   });
   applyFmt('foundFmt');
   function renderTimes() {
-    $('timesList').innerHTML = TIME_KEYS.map(([k, l]) => '<div class="times-row"><span class="lbl">' + l + '</span><span class="tv' + (times[k] ? '' : ' empty') + '" data-k="' + k + '" title="Tap to edit">' + (times[k] || '--:--') + '</span><button class="mini" data-k="' + k + '" data-act="mark">Mark</button><button class="mini del" data-k="' + k + '" data-act="clear">&#10005;</button></div>').join('');
-    const n = TIME_KEYS.filter(([k]) => times[k]).length; $('timesBadge').textContent = n ? n + ' of 4' : '';
+    if ($('f_tzHead')) $('f_tzHead').textContent = zulu ? 'Time (Z)' : 'Time (local)';
+    $('timesHint').textContent = 'Times are recorded in ' + (zulu ? 'Zulu (UTC)' : 'local time') + '; change this in Settings. Tap Mark to record the current time, or tap a time to edit it. Entered and Left search area are also detected from the GPS when a search area is defined.';
+    $('timesList').innerHTML = TIME_ORDER.map(k => [k, TIME_KEYS.find(x => x[0] === k)[1]]).map(([k, l]) => '<div class="times-row"><span class="lbl">' + l + '</span><span class="tv' + (times[k] ? '' : ' empty') + '" data-k="' + k + '" title="Tap to edit">' + (times[k] ? times[k] + (zulu ? 'Z' : '') : '--:--') + '</span><button class="mini" data-k="' + k + '" data-act="mark">Mark</button><button class="mini del" data-k="' + k + '" data-act="clear">&#10005;</button></div>').join('');
+    const n = TIME_KEYS.filter(([k]) => times[k]).length; $('timesBadge').textContent = n ? n + ' of 6' : '';
   }
   $('timesList').addEventListener('click', async e => {
     const b = e.target.closest('button, .tv'); if (!b) return; const k = b.dataset.k;
-    if (b.classList.contains('tv')) { const v = await ask('Time for ' + TIME_KEYS.find(x => x[0] === k)[1] + ' (HH:MM, local)', { input: times[k] || '' }); if (v === null) return; const m = v.trim().match(/^(\d{1,2}):(\d{2})$/); if (!m && v.trim()) { toast('Use HH:MM.'); return; } times[k] = m ? String(+m[1]).padStart(2, '0') + ':' + m[2] : null; }
-    else if (b.dataset.act === 'mark') { times[k] = new Date().toTimeString().slice(0, 5); toast(TIME_KEYS.find(x => x[0] === k)[1] + ' ' + times[k]); }
+    if (b.classList.contains('tv')) { const v = await ask('Time for ' + TIME_KEYS.find(x => x[0] === k)[1] + ' (HH:MM, ' + (zulu ? 'Zulu' : 'local') + ')', { input: times[k] || '' }); if (v === null) return; const m = v.trim().match(/^(\d{1,2}):(\d{2})$/); if (!m && v.trim()) { toast('Use HH:MM.'); return; } times[k] = m ? String(+m[1]).padStart(2, '0') + ':' + m[2] : null; }
+    else if (b.dataset.act === 'mark') { times[k] = nowStamp(); toast(TIME_KEYS.find(x => x[0] === k)[1] + ' ' + times[k] + (zulu ? 'Z' : '')); }
     else if (b.dataset.act === 'clear') times[k] = null;
     renderTimes(); Object.entries(F_TIME_MAP).forEach(([fid, k]) => { f104[fid] = times[k] || ''; $(fid).value = f104[fid]; }); f104Compute(); renderDF({ noCommit: false });
   });
@@ -2436,7 +2486,7 @@ function wmmDeclination(lat, lon, altKm, year) {
   // ---------- CAP Form 104a ----------
   const F104_PDF = 'JVBERi0xLjQNJeLjz9MNCjkgMCBvYmoNPDwvTGluZWFyaXplZCAxL0wgMzExODgvTyAxMS9FIDE2MDc1L04gMi9UIDMwOTYyL0ggWyAxMjE2IDIzNV0+Pg1lbmRvYmoNICAgICAgICAgICAgICAgICAgDQp4cmVmDQo5IDQ2DQowMDAwMDAwMDE2IDAwMDAwIG4NCjAwMDAwMDE0NTEgMDAwMDAgbg0KMDAwMDAwMTUyOSAwMDAwMCBuDQowMDAwMDAxNzA5IDAwMDAwIG4NCjAwMDAwMDIxMDQgMDAwMDAgbg0KMDAwMDAwMjQ0NCAwMDAwMCBuDQowMDAwMDAyOTU4IDAwMDAwIG4NCjAwMDAwMDMxMjIgMDAwMDAgbg0KMDAwMDAwMzE1NyAwMDAwMCBuDQowMDAwMDAzMjAxIDAwMDAwIG4NCjAwMDAwMDMyNDUgMDAwMDAgbg0KMDAwMDAwMzI4OSAwMDAwMCBuDQowMDAwMDAzNTE3IDAwMDAwIG4NCjAwMDAwMDM3MzkgMDAwMDAgbg0KMDAwMDAwMzk4NyAwMDAwMCBuDQowMDAwMDA0MDY0IDAwMDAwIG4NCjAwMDAwMDQ4MTggMDAwMDAgbg0KMDAwMDAwNTY3MiAwMDAwMCBuDQowMDAwMDA2MjYwIDAwMDAwIG4NCjAwMDAwMDcwODAgMDAwMDAgbg0KMDAwMDAwNzgwNiAwMDAwMCBuDQowMDAwMDA4NDk2IDAwMDAwIG4NCjAwMDAwMDkxODggMDAwMDAgbg0KMDAwMDAwOTkyMSAwMDAwMCBuDQowMDAwMDEwMDkyIDAwMDAwIG4NCjAwMDAwMTI3ODUgMDAwMDAgbg0KMDAwMDAxMjkyOSAwMDAwMCBuDQowMDAwMDEzMDc5IDAwMDAwIG4NCjAwMDAwMTMyNTAgMDAwMDAgbg0KMDAwMDAxMzM0MCAwMDAwMCBuDQowMDAwMDEzNTk0IDAwMDAwIG4NCjAwMDAwMTM3NTAgMDAwMDAgbg0KMDAwMDAxMzkwNiAwMDAwMCBuDQowMDAwMDE0MDQwIDAwMDAwIG4NCjAwMDAwMTQyMTEgMDAwMDAgbg0KMDAwMDAxNDI5NSAwMDAwMCBuDQowMDAwMDE0NTQyIDAwMDAwIG4NCjAwMDAwMTQ2OTggMDAwMDAgbg0KMDAwMDAxNDg0MiAwMDAwMCBuDQowMDAwMDE0OTk4IDAwMDAwIG4NCjAwMDAwMTUxNDIgMDAwMDAgbg0KMDAwMDAxNTI4NiAwMDAwMCBuDQowMDAwMDE1NDU3IDAwMDAwIG4NCjAwMDAwMTU3MTAgMDAwMDAgbg0KMDAwMDAxNTgwMyAwMDAwMCBuDQowMDAwMDAxMjE2IDAwMDAwIG4NCnRyYWlsZXINCjw8L1NpemUgNTUvUHJldiAzMDk1Mi9Sb290IDEwIDAgUi9JbmZvIDggMCBSL0lEWzw0RDhCMDRDRDlERUEzMDRDOTVGNDY2NTk2QTI1RDVBRT48MDA4MkI4NDg5NDY2QUE0RkJBMEQ4MzgyRUVCNDZGMkI+XT4+DQpzdGFydHhyZWYNCjANCiUlRU9GDQogICAgICAgICAgICAgICANCjU0IDAgb2JqDTw8L0xlbmd0aCAxNDgvRmlsdGVyL0ZsYXRlRGVjb2RlL0kgMTc0L0wgMTU4L1MgNjM+PnN0cmVhbQ0KeNpiYGBgZmBg5WNgY2DQimPgYUAAHgYWMORYwPDcgWE7WIxTy9oHrgAoigS0oZiBQZmBh1MwQ1jwPocAA8METoYJB7k3XGVadN7YSNNQaLPGp4naCzqWKeSyG3QwF9xmn1DJBmQIXGGfkAtEbBc6eBdY8V2AG8vCwJBhB6SZgNgKiDkYGMqFgDQjEL8GCDAAUU8eRA0KZW5kc3RyZWFtDWVuZG9iag0xMCAwIG9iag08PC9NZXRhZGF0YSA3IDAgUi9QYWdlcyA2IDAgUi9UeXBlL0NhdGFsb2cvUGFnZUxhYmVscyA0IDAgUj4+DWVuZG9iag0xMSAwIG9iag08PC9Dcm9wQm94WzAgMCA2MTIgNzkyXS9QYXJlbnQgNiAwIFIvQ29udGVudHNbMjQgMCBSIDI1IDAgUiAyNiAwIFIgMjcgMCBSIDI4IDAgUiAyOSAwIFIgMzAgMCBSIDMxIDAgUl0vUm90YXRlIDkwL01lZGlhQm94WzAgMCA2MTIgNzkyXS9SZXNvdXJjZXMgMTIgMCBSL1R5cGUvUGFnZT4+DWVuZG9iag0xMiAwIG9iag08PC9YT2JqZWN0PDwvSW0xMCAzMiAwIFIvSW0xMiAzNCAwIFIvSW0xMyAzNSAwIFIvSW0xNCAzNiAwIFIvSW0xNSAzOCAwIFIvSW0xOSAzOSAwIFIvSW0xIDQwIDAgUi9JbTIgNDEgMCBSL0ltMyA0MiAwIFIvSW01IDQ0IDAgUi9JbTcgNDUgMCBSL0ltOCA0NiAwIFIvSW05IDQ3IDAgUi9JbTIwIDQ4IDAgUi9JbTIxIDQ5IDAgUi9JbTIyIDUwIDAgUi9JbTIzIDUxIDAgUi9JbTI0IDUzIDAgUj4+L0NvbG9yU3BhY2U8PC9DczYgMTYgMCBSL0NzOCAxNyAwIFIvQ3M5IDE4IDAgUi9DczEwIDE5IDAgUj4+L0ZvbnQ8PC9UVDIgMTMgMCBSL1RUNCAxNCAwIFIvVFQ2IDE1IDAgUj4+L1Byb2NTZXRbL1BERi9UZXh0L0ltYWdlQ10vRXh0R1N0YXRlPDwvR1MxIDIzIDAgUj4+Pj4NZW5kb2JqDTEzIDAgb2JqDTw8L1N1YnR5cGUvVHJ1ZVR5cGUvRm9udERlc2NyaXB0b3IgMjAgMCBSL0xhc3RDaGFyIDk3L1dpZHRoc1syNzggMCAwIDAgMCAwIDcyMiAwIDAgMCAwIDAgMjc4IDAgMCAwIDU1NiA1NTYgNTU2IDAgNTU2IDAgMCAwIDAgNTU2IDAgMCAwIDAgMCAwIDAgNzIyIDAgNzIyIDcyMiA2NjcgNjExIDc3OCA3MjIgMjc4IDAgNzIyIDYxMSA4MzMgNzIyIDc3OCA2NjcgMCA3MjIgNjY3IDYxMSA3MjIgNjY3IDk0NCAwIDAgMCAwIDAgMCAwIDAgMCA1NTZdL0Jhc2VGb250L0FyaWFsLUJvbGRNVC9GaXJzdENoYXIgMzIvRW5jb2RpbmcvV2luQW5zaUVuY29kaW5nL1R5cGUvRm9udD4+DWVuZG9iag0xNCAwIG9iag08PC9TdWJ0eXBlL1RydWVUeXBlL0ZvbnREZXNjcmlwdG9yIDIxIDAgUi9MYXN0Q2hhciAxNDgvV2lkdGhzWzI3OCAwIDAgMCAwIDg4OSA2NjcgMCAzMzMgMzMzIDAgMCAyNzggMCAyNzggMjc4IDU1NiA1NTYgNTU2IDU1NiA1NTYgNTU2IDU1NiA1NTYgNTU2IDU1NiAyNzggMCAwIDAgMCAwIDAgNjY3IDY2NyA3MjIgNzIyIDY2NyA2MTEgNzc4IDcyMiAyNzggMCA2NjcgNTU2IDgzMyA3MjIgNzc4IDY2NyAwIDcyMiA2NjcgNjExIDcyMiA2NjcgOTQ0IDAgNjY3IDAgMCAwIDAgMCAwIDAgNTU2IDU1NiA1MDAgNTU2IDU1NiAyNzggNTU2IDU1NiAyMjIgMCA1MDAgMjIyIDgzMyA1NTYgNTU2IDU1NiA1NTYgMzMzIDUwMCAyNzggNTU2IDUwMCA3MjIgNTAwIDUwMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAyMjIgMCAzMzNdL0Jhc2VGb250L0FyaWFsTVQvRmlyc3RDaGFyIDMyL0VuY29kaW5nL1dpbkFuc2lFbmNvZGluZy9UeXBlL0ZvbnQ+Pg1lbmRvYmoNMTUgMCBvYmoNPDwvU3VidHlwZS9UcnVlVHlwZS9Gb250RGVzY3JpcHRvciAyMiAwIFIvTGFzdENoYXIgMzIvV2lkdGhzWzI1MF0vQmFzZUZvbnQvVGltZXNOZXdSb21hblBTLUJvbGRNVC9GaXJzdENoYXIgMzIvRW5jb2RpbmcvV2luQW5zaUVuY29kaW5nL1R5cGUvRm9udD4+DWVuZG9iag0xNiAwIG9iag1bL0lDQ0Jhc2VkIDMzIDAgUl0NZW5kb2JqDTE3IDAgb2JqDVsvSW5kZXhlZCAxNiAwIFIgMTIgMzcgMCBSXQ1lbmRvYmoNMTggMCBvYmoNWy9JbmRleGVkIDE2IDAgUiAxMCA0MyAwIFJdDWVuZG9iag0xOSAwIG9iag1bL0luZGV4ZWQgMTYgMCBSIDEzIDUyIDAgUl0NZW5kb2JqDTIwIDAgb2JqDTw8L1N0ZW1WIDEzOC9Gb250TmFtZS9BcmlhbC1Cb2xkTVQvRm9udFN0cmV0Y2gvTm9ybWFsL0ZvbnRXZWlnaHQgNzAwL0ZsYWdzIDMyL0Rlc2NlbnQgLTIxMS9Gb250QkJveFstNjI4IC0zNzYgMjAwMCAxMDEwXS9Bc2NlbnQgOTA1L0ZvbnRGYW1pbHkoQXJpYWwpL0NhcEhlaWdodCA3MTgvWEhlaWdodCA1MTUvVHlwZS9Gb250RGVzY3JpcHRvci9JdGFsaWNBbmdsZSAwPj4NZW5kb2JqDTIxIDAgb2JqDTw8L1N0ZW1WIDg4L0ZvbnROYW1lL0FyaWFsTVQvRm9udFN0cmV0Y2gvTm9ybWFsL0ZvbnRXZWlnaHQgNDAwL0ZsYWdzIDMyL0Rlc2NlbnQgLTIxMS9Gb250QkJveFstNjY1IC0zMjUgMjAwMCAxMDA2XS9Bc2NlbnQgOTA1L0ZvbnRGYW1pbHkoQXJpYWwpL0NhcEhlaWdodCA3MTgvWEhlaWdodCA1MTUvVHlwZS9Gb250RGVzY3JpcHRvci9JdGFsaWNBbmdsZSAwPj4NZW5kb2JqDTIyIDAgb2JqDTw8L1N0ZW1WIDEzNi9Gb250TmFtZS9UaW1lc05ld1JvbWFuUFMtQm9sZE1UL0ZvbnRTdHJldGNoL05vcm1hbC9Gb250V2VpZ2h0IDcwMC9GbGFncyAzNC9EZXNjZW50IC0yMTYvRm9udEJCb3hbLTU1OCAtMzA3IDIwMDAgMTAyNl0vQXNjZW50IDg5MS9Gb250RmFtaWx5KFRpbWVzIE5ldyBSb21hbikvQ2FwSGVpZ2h0IDY1Ni9YSGVpZ2h0IDQ1My9UeXBlL0ZvbnREZXNjcmlwdG9yL0l0YWxpY0FuZ2xlIDA+Pg1lbmRvYmoNMjMgMCBvYmoNPDwvT1BNIDEvT1AgZmFsc2Uvb3AgZmFsc2UvVHlwZS9FeHRHU3RhdGUvU0EgZmFsc2UvU00gMC4wMj4+DWVuZG9iag0yNCAwIG9iag08PC9MZW5ndGggNjg0L0ZpbHRlci9GbGF0ZURlY29kZT4+c3RyZWFtDQpIidxVTU/cMBC951fMqYpRM/jbTm/LEigFdmni1R6qHqoKEJWg4kPq3+/YTrIEWNRDhape4tgzY3veeN67LQRcQaEsag9Kowch0EgQKOHufFh3T5bXO3BTcHC1RK7ACgkV/ScLGdBzAZfF7mFHw/3zvZXWqKPzRfF5i7MdXWV23AvFbgh0AQgXdLLgyOnQPHDQBtMVOUoP4ZocLgvknDsI34uK/hTF/Sq+lPO2YXW5hrY5ZQ51OWOVQFe2TKMqj/Okg3ewSAtLZlGUoelgvlyEI1bTLFtWzT6wr+FT0QS6ckxOSUDt6trT4DnllK791KboprQ22lyNj+LS0Nt6zCg0IzHdNVclBg/WTWyGSg9QOSRDlb4cjEMV0SWMCBUhBnwiUhGf9d3Vw8P5Dcx/Xl+f37DKEh4PjD73OV1OmCMlUUPYpwlF8xhYAgs/eqPyKhofL/X+W73Czpu4v9Exf89d/0uX+Y/rVUNVx+awAgX1Ud8g2UoNPnbiC02s/aZRjbAo9aRTjdVx6Uk4UaGfhKdOHsM3rTyEb6OJ3Op2ZMVMipkTjTVo5SSXV2hBpXNGYjADMYiBOGdncLBsT4l5daQFVX57D7PVIbFhXQLPS3UegFXaEpaWCDSaz1gVOXa3zdNVOFrkuA+MAI/uDk25v6Qf66RAX57NskMDEpYH9KEtPMpI17RTb0v/XU9Lk9SJH2vQQmcpmJIU1fO21zwX8dFCkjBJiVqDtBx9EhwdH1DaQtBZZDFUqD+Xvte2fiR62095LngqJ6j64qrI+tqksvWCl3hcjYqnUs7drCWx61YnoYP1sj3uPjZNeP0xaAPWWTT9W5DjW5D9WwjtbH4ca2hi7Rer072mzfJQoTBcp16rvXlJI6JeOhQ6gaNGWZto3wv2TcvBbwEGAM7uwokNCmVuZHN0cmVhbQ1lbmRvYmoNMjUgMCBvYmoNPDwvTGVuZ3RoIDc4NC9GaWx0ZXIvRmxhdGVEZWNvZGU+PnN0cmVhbQ0KSImUVVtP2zAUfs+vOE9TMqnGdhxfeOvaaus0CqOReIA9MChVJ9qOUrS/v+Nb7BQqgSolds/nc/0+56GoFWECVKMIByI0pcy/BOwWxYM1Sw6CcVJz4JwIgWZljM7NUtX2dczsnUdr8v1UMFhBISlphAuhYV0oTqgMu8ew8w4eA/JwJx0uLQTW89h5teurz7ApKCiD3mqQjMMA1zaJKzQQjTUve2kwRhoOtRAkpPrzECUsRkjEcI/40hYnbcuBQfuAsRglFMP4FwVpiBbQ8AbaNVqXxYBgpzm0d93qX1GeTefz6fkMxsN2CPPJqLWbqv1TTFobOPSldoPCyA2ppQ+eckejTz4fQ963aE1j8JmLmLkieGzgnrZlxPiOYt69lKn2Ka+en1fbDcxe1r8XO5csxbIxhqyhHeMG8dRBnVETQ3kNCRBcBafCIq87r+Pb/QKqQc2FJqw8O4cTOLuwjzlcVgNJRLn4u93tV5sl3JTVQJCmnFWM8PJ2bc8p3H+C0fBiOr6poPrVfredTAwLnVSuJa4XjpBP2AqKPwYBqms7vbu1+9fOD/luLAXd6WxN8W3J4s812HAlXQhmXCNdDDSmYXGkWH9YwYwxcbrR7HSZmYPrY6eD4tLhTnFGWRVGsTGK80hqC9soMI893MkI7K290KL3d4suT+e46JLbD4mOUUkU9grJw3UUniVxpJsJdJtPhpeVILIcfYOwmgw7vhgZe/SaL4kqAfVhqvhzR6iS2vOmrvMBfUzXjFOidCZsq7wo1Bmq59SplTMiqQGCcCfWdGtdl193K6s4Wd5XqHdRnnYNy1j1xl3FqMmLwtz7RQV7o4XtyFF7qDqYe1Uf1lo3Pp1+rXgjS+SSI8Bou9ss7H0hyl3FsSb4cbtf7V/u7S0iGmXKH9vNMvwRq+SSyLxK/+lMiSZuZFCdc0O4xDwf8nXkRjzX6EAOG4Ib3fGDcff1TgRR/QwwhvU3cKS0naC2JcHf3bo4ma4ZjLcY6jVUEM3fCdVZlm9DCdMBiUd6SH7MqUtVUjdEhMJ/AQYACY/KmA0KZW5kc3RyZWFtDWVuZG9iag0yNiAwIG9iag08PC9MZW5ndGggNTE4L0ZpbHRlci9GbGF0ZURlY29kZT4+c3RyZWFtDQpIiZSUPW8bMQyGd/0KjefBjChRErUG6dAOAYLeFnQoAhdFAMNImiJ/v/q6uHeGZGWwl3tI8RUf6ObrEeXdSTyIF6EkEMu9ASapJBoC1tIpD4Hl01HcdFAG5/ooIFcylqxIXUjUHpCktx60RASf6pQi+XoQv8TtHBvlon3+j62IE0/xNx/jx/ldPE73p9e337uI0PS+YzDT4c+b3P2YvwkLjMHGOQxalvOdQAbSqfhJTFLu5mfxZRZ1PkINRufBgXyI5+UhXoSGlFdJQw4MxzgemCOOqaoGtzVPaVXylE7nOGhCOqCegxHRm5M2N0wG0EmyDN7Vg3xjGeTHOKty1CGUwHEfjTfgMurAbrqibk2aQ61k6IQa4kqoMTSH6qLrUGu/F23LJqu2dZFdb50timVvQSllsoNZ3cPP5Gt0cVDXetvXdTVgYwwLdmOrPSfWSeV9apISe1ApFSXNa2JTE5dDG2KXwnGxnUp3vPIlNBbmCPwgyRcStlCvU8IuuljgCfSmK7cGyKlWwnRTjZF8YWE/VRddp1qhvCy6SjCsNpui46I2Jl0fp++nv+lVdsD5VQ6ffpXrzX9onjr3H2ZvQG9U14u/pduHv6XZfwrH7/4zCvu4l43C2FoMp0EHUXehW5MNChRfYZeFB4Sw6atVy6Mcbf3wdaMNou7CuSvRzqz8J8AAJ3LJjg0KZW5kc3RyZWFtDWVuZG9iag0yNyAwIG9iag08PC9MZW5ndGggNzUwL0ZpbHRlci9GbGF0ZURlY29kZT4+c3RyZWFtDQpIiZRVTVPbQAy9+1foaHcmy35/HFPItHQoBWLoofRgginpJGEIZjr992jXa2OH2g0X22NpJb2nJ+3B8Zo5OHpIzpPHhAKRFiaMWA0UmGPESdDUEGdhsU4Ojtec1r7MSGI4GGUIB4YP7o9SKmFbJnfJxxxjhWOT8KTAKSNcgmQS8nVCKKUW8kWSzh+eq/uyeKogy38niljmFEyIYArtRwmzRHJ/Bl0huMzyJBYmGSci5mX4Mg4zhfSPCScSk1IQUhNhEQr1ZUiG0GQDRUYodbQaShvsFQtzGIw32Rqs3WSRNuFje9o04RqkssTomIvtMBxdOaWE7ekpAuS9XA0xdtw1dphTR/ROVD4QNsLqqWEU1n6e4o3ExmGNuvZh9YXLmm6Hbg4JF5XDsPi63agbRhS6oStao8Uo3f///QNsvNwxMhWg0WWC38GCBmJRT7/+FVZISWLa8zdusnXi7Ugd5DkmhfwOs6EfxUT1CyEzF0RqJcHUOGEUg03aMfNfTEP+Bwfu20V+PIP5bHpx+BnOTqancDW7mF/OYXqYX05PmiFrtNEOWV/0WIefLwYdP891+OvTS0WchlXiT3a/Kb494L72vIU7S1xE26HLD12gopu/7UVoYzT39g+SJRuy+ptI0Hp7NJsI4yBFmMkxrTxHP9KrYrssblblE5ytis2mvIVMSawunS6q52IF2c/8SyCJsx2SBGIVOhbJeR+E6WOozQpnwOjGHNZP16yxXGkHT7cMmP8tYFSbtt0FHLYqrUVRFtvFPZwVVVVuN0ECGBJ7o3EXM5zSsIsV0RQvi94u5gLnk+/s4h4JQhIxvD1rc8PB6zyyrrnhYOD0O24hzf110Ok9a8aDmrr1kYqr5dPyZrlaVn8zLF2mcJ1mE0l4epqh2tKv11ktglGaanJfuVJBqENqUSOXjDcOk6T4CEXqXde0xYXyViUtLdNVtayeb8tIBw5E5rdu+ulkL0I6XGjnqxnRDTqYIULgRYABAEh10HgNCmVuZHN0cmVhbQ1lbmRvYmoNMjggMCBvYmoNPDwvTGVuZ3RoIDY1Ni9GaWx0ZXIvRmxhdGVEZWNvZGU+PnN0cmVhbQ0KSImclU9T2zAQxe/6FHu0D97Rf8nXtrQdOrQzxTfgkAkmDQ0J44Ty9buyZGMg8jS9eDJ5Wj/tb6XnOyZtjQ4MV+gsCIdSAmrPuYCuZXdJtorTn6Ps6tpPZWdImBbrqH5oGAeHtLjqnxxk7dB50EJD88CQc66gWfY/BDTP7Kq4bBfd8hdcPrbtLVwX38qqRl1sd4f9dQnlTXPOhEBtvIUKhQzln5gwaLmow5t4eEsBUDb37Kxh0lusJflJVOPOlTaobGrAO9SDfqS/Xs7T6eU8nV7+dzqKGtFTOkKEnqqAx0U8TbdY/iY6i+V6uyI+ZaVRFt9Lgaa4+B9Cimu0E0J9c1NCihsUeUJRzhKKcpZQlE8gpBSKkVA1HiAC03ZdWVGbxWK9jRjOQvkXJuCcKu8BnYRnEBwu4OqGwy1TSqMHQ68kw4oOik1PMlfSodeD+MD2RzejUYQ1OuwpnWczTkxE0J83iwO84I6eVqOWOc8ozntag8YOp8QPngFL8Py522zC+fi63mz2ozVNwAgVBvHWWIvQZRIzxtqhCmv645KMx15t8n1arejaRlt4ZezILOfba/O2zoeViXE9+proe7F72h5o7run/WvQ1tThXB4HncRZ0NZy2tsps7W1CIUZyyjOW9YSpT99tlZzfH+mIuKozSK2tFLlgmdutI7uvs0ZJ3HW2VEEOXvScGWfRvlYDwv8oIfweRM7vZxCa5AnodXLKbRy1TG0JsX50KILzV+HlnhJ4o+7P203Nkb3mr7GFNf+PVHj0elBzBCl+v4m90WDmx6+sT4S/fHYbuGNpREhfTOWUZy3NDLQT0MUg6OKny0a4m3bLQ4lVfmihTGgo7vlPNyO4+5JfGDwV4ABALqw1BANCmVuZHN0cmVhbQ1lbmRvYmoNMjkgMCBvYmoNPDwvTGVuZ3RoIDYyMC9GaWx0ZXIvRmxhdGVEZWNvZGU+PnN0cmVhbQ0KSImkVE1v00AQvftX7NE+eLTfs3tFRUIIVCRyQxzS4EJQm6A0peq/Z8a7TkySXaBcEidv1+/Nm3nz0LxaNFIgxCD68VMK4x1IK7xU/Htx33xqxZth+bPrlQLdPnefF2+b14vGYIAonApgRe8h+vy5GwiiuzZj983DJRa6rflIBGeZBaSURLdqen6iv56Y+N3667e9+LjZdj22T10AbIUQJxLQg/QlDQmsi0AEzRpGasUi+MFlDVz8c9YAkVQghPaogexC4a2GcwmO9NqMFRRks63hk5MEO0kILKEV1z+GDVW9+D4jxFCiI6ROhhHUwfNDuSaX+377Zdgt91xsaIeuB9WKk2pRI3hd4M9gVQJqOuovDRd92fakwd46UOflpgZnsNpgbz0YFeP/zRlKDaE06xmsykBpcqReNGjOgNbCKg1GC7CB32CoejPquB0P4IQbCZZPYSTGGexIAzk/weNLZrBnIBRvo+OkzC7bhF4oOVp+sMdBG4dajgO9eNzdPN4Nm9VwGOroKSNOWZ6gU4dDBG8nsOBwdGnjOAhhYsRDm03KUeqyOCF1kuNQIE1gndTR6Ia/zNN8qkb6vGcv02ewSu+po0rXFnXisZSs8xWVeRJY5xnX2D9Z62n5hiJnAuuc+GJfxxVToE5YlRl15Dz/eUMFy+5XUkkH/IQr5Aj/lqsRzqmc4FkqRzinsnQ7pXJ2uZhKluHnqVTq0EhMvn7YbW+WN+u7NTlLDeKCNRd83Vlw7W3Hm5E9d+3VwCew3Q+r/Xq7SZawO457Tq5wq64aiiSNcTym/zAklqY71LyztFRNyTvxS4ABAFf01gYNCmVuZHN0cmVhbQ1lbmRvYmoNMzAgMCBvYmoNPDwvTGVuZ3RoIDYyMi9GaWx0ZXIvRmxhdGVEZWNvZGU+PnN0cmVhbQ0KSImclc2O0zAURvd5Cq+QjZSL/50sBygSIEDTWpoFYlF1WmYQnYqoEq/PZyeNUjQOtJu08bGvfc+1nV1lpSbDnDQUPFOBtGZkGykV67bVbsDeSDSOOLRtM8XBAUwH256+jpVkgdC5zk/JLAKZhlllWdxXJNM8cZP/GBZ/V195fBS1IcP3WxYPbLVdC4wNvBOYiG8SC/xB1KQ4u+m2aya+xQ+VUmRd4xmadQr0tlKOvFRtCi5TYM6YiD+qRaysaslpLAEBx1yNdWT8kJOWJ/pMwoBlWYBlVYAXiLINyTNRPuVSp3/6ZAqOVsd1d9zeQ1TypPm62zxc4cTkJc04QYcwYyXjspeMy2YyvsCNdxTO3LSjGzdxs3i6z2awhTy12EIGu+YqPc5SO9GTl36mxzmyM3oyLuvJuKwn4wv0NCYFmuhxox410fP+KbnJ+wVDHb/yOAVNftZNgPYZNxmX3WRcdpPx/7txUpHC8H/bedcd9sOpMjhVorbUpM1zpaVWpvRnDhg6NDOWMi5byrhsKeMLLKmGmnNLWp0sqTBYwnFq+UEoPI/rn2x16ISFqyNaAn/E9Z074DpX/XV+sTQncQfOba3UwZWl9bgorcdFaT0uSftVOe2pXxxGq/RJUXgH7EFw/rz57iV7SqJbTUjcKw3dbU8AqMGyvj8T1FhLw5y3f/eyYx89lvJVjJiSxR3mUjL5q/sflNXgImlRVodPIIagshLRho9vX109VPfNciEa8vyOLRefROA3ota4PZe5ph/7lxV7wT7nhi8CNzKPi1Vf5FQ7jZbZ2o2ZptrlNM7sDxKz/YGe7LM/AgwAK13O4Q0KZW5kc3RyZWFtDWVuZG9iag0zMSAwIG9iag08PC9MZW5ndGggNjYzL0ZpbHRlci9GbGF0ZURlY29kZT4+c3RyZWFtDQpIiaSWyW4TQRCG7/MUdeyRmErvi28GkggksJVMuBAOwdiSURJLtsXy9lTN5nHCZIy4tNv+q7q/rq6/5VX2uszOytKCgnKVSUhQJJDgbERpUgKrLJQPWYFSSgflgkLKn9lncb5aLRf79Y/l43K3m+RFQiMg/1K+z87LjLMD2OhQWig8Jt+M2yVpCoNtxYdsxwQSAqYIRTX2d48eVWQAyXvTDuX3v0HGiB2m0hxKE2Mb1F+LnFcWy1yhF/f3eeEwiOXjHuAJsrMSbRxAbsQRZA72ukOuyjXE7azBeABXLbipki43m29MSKkHwKhwqKS1NoYXNTp7Il60GDzH9ul4wmW9uMsNFXW9fVpErwwaPQDZiCOUXlm0/jRKrzz62DVpaDB1qjHnm82WLtzQguJ6sdku4VYo2G/A3eaTA7kJGDR1u2Y6tCERkLEOTQW/ooCInU5jaoN6qqeR6jWgBhewS42Smr8Sqyq0Z/J0g+rYdSrxgRRGE5p+hk/r3frrOqfSWnG/3ueFktTPv3NF2WLSfD0czWuUsTLc885xDskvtTZwJx0TeXGscw6xsemc/3Bkzc2ui0PgjThCzq2X4mnkzlrUJzqyASTbBT8EWItjgJG74jS+WK37D56sKdl3/vnLVlM24gglmzLy5CRQrwI/8C/b0qYRWzqF6iVXku5iZ0vTC6t1T+v3bF3ZTmsyjj1aoHXu0ALeJNS2XUDR0dIxQWNu09umn1/LjfDM/cflDhp1OLwBfLuei9c6iav3ZjqHi9nVB1DS8jugxd0rmN5c5k6ArH9I9QdQkb1nl81InOcFza7OrvjLTfnuI2dMyIRVYEAn3s5o4oOmB0fMpyyf01+D2QVooOSISkyrNSrlurso+CPAAG9vuScNCmVuZHN0cmVhbQ1lbmRvYmoNMzIgMCBvYmoNPDwvU3VidHlwZS9JbWFnZS9MZW5ndGggMjIvRmlsdGVyL0ZsYXRlRGVjb2RlL0ltYWdlTWFzayB0cnVlL0JpdHNQZXJDb21wb25lbnQgMS9XaWR0aCA2L0hlaWdodCA3MTYvVHlwZS9YT2JqZWN0Pj5zdHJlYW0NCmje+v///igYBcMA/P8PEGAAVtRwUwoNCmVuZHN0cmVhbQ1lbmRvYmoNMzMgMCBvYmoNPDwvTGVuZ3RoIDI1OTgvRmlsdGVyL0ZsYXRlRGVjb2RlL04gMy9BbHRlcm5hdGUvRGV2aWNlUkdCPj5zdHJlYW0NCmjenJZ3VFTXFofPvXd6oc0w0hl6ky4wgPQuIB0EURhmBhjKAMMMTWyIqEBEEREBRZCggAGjoUisiGIhKKhgD0gQUGIwiqioZEbWSnx5ee/l5ffHvd/aZ+9z99l7n7UuACRPHy4vBZYCIJkn4Ad6ONNXhUfQsf0ABniAAaYAMFnpqb5B7sFAJC83F3q6yAn8i94MAUj8vmXo6U+ng/9P0qxUvgAAyF/E5mxOOkvE+SJOyhSkiu0zIqbGJIoZRomZL0pQxHJijlvkpZ99FtlRzOxkHlvE4pxT2clsMfeIeHuGkCNixEfEBRlcTqaIb4tYM0mYzBXxW3FsMoeZDgCKJLYLOKx4EZuImMQPDnQR8XIAcKS4LzjmCxZwsgTiQ7mkpGbzuXHxArouS49uam3NoHtyMpM4AoGhP5OVyOSz6S4pyalMXjYAi2f+LBlxbemiIluaWltaGpoZmX5RqP+6+Dcl7u0ivQr43DOI1veH7a/8UuoAYMyKarPrD1vMfgA6tgIgd/8Pm+YhACRFfWu/8cV5aOJ5iRcIUm2MjTMzM424HJaRuKC/6386/A198T0j8Xa/l4fuyollCpMEdHHdWClJKUI+PT2VyeLQDf88xP848K/zWBrIieXwOTxRRKhoyri8OFG7eWyugJvCo3N5/6mJ/zDsT1qca5Eo9Z8ANcoISN2gAuTnPoCiEAESeVDc9d/75oMPBeKbF6Y6sTj3nwX9+65wifiRzo37HOcSGExnCfkZi2viawnQgAAkARXIAxWgAXSBITADVsAWOAI3sAL4gWAQDtYCFogHyYAPMkEu2AwKQBHYBfaCSlAD6kEjaAEnQAc4DS6Ay+A6uAnugAdgBIyD52AGvAHzEARhITJEgeQhVUgLMoDMIAZkD7lBPlAgFA5FQ3EQDxJCudAWqAgqhSqhWqgR+hY6BV2ArkID0D1oFJqCfoXewwhMgqmwMqwNG8MM2An2hoPhNXAcnAbnwPnwTrgCroOPwe3wBfg6fAcegZ/DswhAiAgNUUMMEQbigvghEUgswkc2IIVIOVKHtCBdSC9yCxlBppF3KAyKgqKjDFG2KE9UCIqFSkNtQBWjKlFHUe2oHtQt1ChqBvUJTUYroQ3QNmgv9Cp0HDoTXYAuRzeg29CX0HfQ4+g3GAyGhtHBWGE8MeGYBMw6TDHmAKYVcx4zgBnDzGKxWHmsAdYO64dlYgXYAux+7DHsOewgdhz7FkfEqeLMcO64CBwPl4crxzXhzuIGcRO4ebwUXgtvg/fDs/HZ+BJ8Pb4LfwM/jp8nSBN0CHaEYEICYTOhgtBCuER4SHhFJBLVidbEACKXuIlYQTxOvEIcJb4jyZD0SS6kSJKQtJN0hHSedI/0ikwma5MdyRFkAXknuZF8kfyY/FaCImEk4SXBltgoUSXRLjEo8UISL6kl6SS5VjJHslzypOQNyWkpvJS2lIsUU2qDVJXUKalhqVlpirSptJ90snSxdJP0VelJGayMtoybDFsmX+awzEWZMQpC0aC4UFiULZR6yiXKOBVD1aF6UROoRdRvqP3UGVkZ2WWyobJZslWyZ2RHaAhNm+ZFS6KV0E7QhmjvlygvcVrCWbJjScuSwSVzcopyjnIcuUK5Vrk7cu/l6fJu8onyu+U75B8poBT0FQIUMhUOKlxSmFakKtoqshQLFU8o3leClfSVApXWKR1W6lOaVVZR9lBOVd6vfFF5WoWm4qiSoFKmclZlSpWiaq/KVS1TPaf6jC5Ld6In0SvoPfQZNSU1TzWhWq1av9q8uo56iHqeeqv6Iw2CBkMjVqNMo1tjRlNV01czV7NZ874WXouhFa+1T6tXa05bRztMe5t2h/akjpyOl06OTrPOQ12yroNumm6d7m09jB5DL1HvgN5NfVjfQj9ev0r/hgFsYGnANThgMLAUvdR6KW9p3dJhQ5Khk2GGYbPhqBHNyMcoz6jD6IWxpnGE8W7jXuNPJhYmSSb1Jg9MZUxXmOaZdpn+aqZvxjKrMrttTjZ3N99o3mn+cpnBMs6yg8vuWlAsfC22WXRbfLS0suRbtlhOWWlaRVtVWw0zqAx/RjHjijXa2tl6o/Vp63c2ljYCmxM2v9ga2ibaNtlOLtdZzllev3zMTt2OaVdrN2JPt4+2P2Q/4qDmwHSoc3jiqOHIdmxwnHDSc0pwOub0wtnEme/c5jznYuOy3uW8K+Lq4Vro2u8m4xbiVun22F3dPc692X3Gw8Jjncd5T7Snt+duz2EvZS+WV6PXzAqrFetX9HiTvIO8K72f+Oj78H26fGHfFb57fB+u1FrJW9nhB/y8/Pb4PfLX8U/z/z4AE+AfUBXwNNA0MDewN4gSFBXUFPQm2Dm4JPhBiG6IMKQ7VDI0MrQxdC7MNaw0bGSV8ar1q66HK4RzwzsjsBGhEQ0Rs6vdVu9dPR5pEVkQObRGZ03WmqtrFdYmrT0TJRnFjDoZjY4Oi26K/sD0Y9YxZ2O8YqpjZlgurH2s52xHdhl7imPHKeVMxNrFlsZOxtnF7YmbineIL4+f5rpwK7kvEzwTahLmEv0SjyQuJIUltSbjkqOTT/FkeIm8nhSVlKyUgVSD1ILUkTSbtL1pM3xvfkM6lL4mvVNAFf1M9Ql1hVuFoxn2GVUZbzNDM09mSWfxsvqy9bN3ZE/kuOd8vQ61jrWuO1ctd3Pu6Hqn9bUboA0xG7o3amzM3zi+yWPT0c2EzYmbf8gzySvNe70lbEtXvnL+pvyxrR5bmwskCvgFw9tst9VsR23nbu/fYb5j/45PhezCa0UmReVFH4pZxde+Mv2q4quFnbE7+0ssSw7uwuzi7Rra7bD7aKl0aU7p2B7fPe1l9LLCstd7o/ZeLV9WXrOPsE+4b6TCp6Jzv+b+Xfs/VMZX3qlyrmqtVqreUT13gH1g8KDjwZYa5ZqimveHuIfu1nrUttdp15UfxhzOOPy0PrS+92vG140NCg1FDR+P8I6MHA082tNo1djYpNRU0gw3C5unjkUeu/mN6zedLYYtta201qLj4Ljw+LNvo78dOuF9ovsk42TLd1rfVbdR2grbofbs9pmO+I6RzvDOgVMrTnV32Xa1fW/0/ZHTaqerzsieKTlLOJt/duFczrnZ86nnpy/EXRjrjup+cHHVxds9AT39l7wvXbnsfvlir1PvuSt2V05ftbl66hrjWsd1y+vtfRZ9bT9Y/NDWb9nffsPqRudN65tdA8sHzg46DF645Xrr8m2v29fvrLwzMBQydHc4cnjkLvvu5L2key/vZ9yff7DpIfph4SOpR+WPlR7X/aj3Y+uI5ciZUdfRvidBTx6Mscae/5T+04fx/Kfkp+UTqhONk2aTp6fcp24+W/1s/Hnq8/npgp+lf65+ofviu18cf+mbWTUz/pL/cuHX4lfyr468Xva6e9Z/9vGb5Dfzc4Vv5d8efcd41/s+7P3EfOYH7IeKj3ofuz55f3q4kLyw8JsAAwD3hPP7Cg0KZW5kc3RyZWFtDWVuZG9iag0zNCAwIG9iag08PC9TdWJ0eXBlL0ltYWdlL0xlbmd0aCAxMy9CaXRzUGVyQ29tcG9uZW50IDgvQ29sb3JTcGFjZSAxNiAwIFIvV2lkdGggMS9IZWlnaHQgNC9UeXBlL1hPYmplY3Q+PnN0cmVhbQ0KAAAAGhoa5eXl////Cg0KZW5kc3RyZWFtDWVuZG9iag0zNSAwIG9iag08PC9TdWJ0eXBlL0ltYWdlL0xlbmd0aCAxOS9CaXRzUGVyQ29tcG9uZW50IDgvQ29sb3JTcGFjZSAxNiAwIFIvV2lkdGggNi9IZWlnaHQgMS9UeXBlL1hPYmplY3Q+PnN0cmVhbQ0Knp6e////////////eHh4AAAACg0KZW5kc3RyZWFtDWVuZG9iag0zNiAwIG9iag08PC9TdWJ0eXBlL0ltYWdlL0xlbmd0aCAyMi9GaWx0ZXIvRmxhdGVEZWNvZGUvSW1hZ2VNYXNrIHRydWUvQml0c1BlckNvbXBvbmVudCAxL1dpZHRoIDYvSGVpZ2h0IDcyMi9UeXBlL1hPYmplY3Q+PnN0cmVhbQ0KaN76///+KBgFwwb8/w8QYAAJvnWNCg0KZW5kc3RyZWFtDWVuZG9iag0zNyAwIG9iag08PC9MZW5ndGggNDA+PnN0cmVhbQ0Kf39/////8PDwDw8PAAAA+Pj4LCwsSEhIV1dXoKCgY2Njnp6eeHh4Cg0KZW5kc3RyZWFtDWVuZG9iag0zOCAwIG9iag08PC9TdWJ0eXBlL0ltYWdlL0xlbmd0aCA5MC9GaWx0ZXIvRmxhdGVEZWNvZGUvQml0c1BlckNvbXBvbmVudCA0L0NvbG9yU3BhY2UgMTcgMCBSL01hc2sgMzYgMCBSL1dpZHRoIDYvSGVpZ2h0IDcyMi9UeXBlL1hPYmplY3Q+PnN0cmVhbQ0KaN5iYGBgcGBgcWHgOcPAKAhF3LtBCCgIRFyrEOKcM0FoVHxUfFR8oMQ5OhDiQAQRBCL28lHxUfFR8cEizpbGwBqKRZzZmIFJaeSKMwgAGxwMAAEGAJrIu48KDQplbmRzdHJlYW0NZW5kb2JqDTM5IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDI1L0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA4L1R5cGUvWE9iamVjdD4+c3RyZWFtDQr///////////////9AQEAAAAAAAAAAAAAKDQplbmRzdHJlYW0NZW5kb2JqDTQwIDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDI1L0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA4L1R5cGUvWE9iamVjdD4+c3RyZWFtDQoAAAAAAAAAAACfn5////////////9gYGAKDQplbmRzdHJlYW0NZW5kb2JqDTQxIDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDQvQml0c1BlckNvbXBvbmVudCA4L0NvbG9yU3BhY2UgMTYgMCBSL1dpZHRoIDEvSGVpZ2h0IDEvVHlwZS9YT2JqZWN0Pj5zdHJlYW0NCgAAAAoNCmVuZHN0cmVhbQ1lbmRvYmoNNDIgMCBvYmoNPDwvU3VidHlwZS9JbWFnZS9MZW5ndGggMjIvRmlsdGVyL0ZsYXRlRGVjb2RlL0ltYWdlTWFzayB0cnVlL0JpdHNQZXJDb21wb25lbnQgMS9XaWR0aCA2L0hlaWdodCA3MjIvVHlwZS9YT2JqZWN0Pj5zdHJlYW0NCmje+v///CgYBcMG/P8PEGAAp65IrQoNCmVuZHN0cmVhbQ1lbmRvYmoNNDMgMCBvYmoNPDwvTGVuZ3RoIDM0Pj5zdHJlYW0NCn9/f/////Dw8A8PDwAAAPj4+CwsLEhISFdXV6CgoGNjYwoNCmVuZHN0cmVhbQ1lbmRvYmoNNDQgMCBvYmoNPDwvU3VidHlwZS9JbWFnZS9MZW5ndGggODMvRmlsdGVyL0ZsYXRlRGVjb2RlL0JpdHNQZXJDb21wb25lbnQgNC9Db2xvclNwYWNlIDE4IDAgUi9NYXNrIDMyIDAgUi9XaWR0aCA2L0hlaWdodCA3MTYvVHlwZS9YT2JqZWN0Pj5zdHJlYW0NCmjeYmBgYHBgYHGBIq5VDIyCUMQ5E4RGxUfFR8XpLw5kAMU5OhDiEBEIYi8fFR8VHxUfYHG4FFsaA2soFvXMxgxMSiNXnEEA2LxgAAgwAHxmuIkKDQplbmRzdHJlYW0NZW5kb2JqDTQ1IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDI1L0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA4L1R5cGUvWE9iamVjdD4+c3RyZWFtDQoAAAAaGhrl5eX////////l5eUaGhoAAAAKDQplbmRzdHJlYW0NZW5kb2JqDTQ2IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDEzL0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA0L1R5cGUvWE9iamVjdD4+c3RyZWFtDQr4+PgtLS0AAAAAAAAKDQplbmRzdHJlYW0NZW5kb2JqDTQ3IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDI1L0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA4L1R5cGUvWE9iamVjdD4+c3RyZWFtDQr4+PgtLS0AAAAAAAAHBwfS0tL///////8KDQplbmRzdHJlYW0NZW5kb2JqDTQ4IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDEzL0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA0L1R5cGUvWE9iamVjdD4+c3RyZWFtDQr///////////////8KDQplbmRzdHJlYW0NZW5kb2JqDTQ5IDAgb2JqDTw8L1N1YnR5cGUvSW1hZ2UvTGVuZ3RoIDEzL0JpdHNQZXJDb21wb25lbnQgOC9Db2xvclNwYWNlIDE2IDAgUi9XaWR0aCAxL0hlaWdodCA0L1R5cGUvWE9iamVjdD4+c3RyZWFtDQoAAAAAAAAAAACfn58KDQplbmRzdHJlYW0NZW5kb2JqDTUwIDAgb2JqDTw8L1N1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cGUvUGFnZXMvS2lkc1sxMSAwIFIgMSAwIFJdPj4NZW5kb2JqDTcgMCBvYmoNPDwvU3VidHlwZS9YTUwvTGVuZ3RoIDM2MDMvVHlwZS9NZXRhZGF0YT4+c3RyZWFtDQo8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/Pgo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA0LjAtYzMxNiA0NC4yNTM5MjEsIFN1biBPY3QgMDEgMjAwNiAxNzoxNDozOSI+CiAgIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgICAgIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyI+CiAgICAgICAgIDxkYzpmb3JtYXQ+YXBwbGljYXRpb24vcGRmPC9kYzpmb3JtYXQ+CiAgICAgICAgIDxkYzpjcmVhdG9yPgogICAgICAgICAgICA8cmRmOlNlcT4KICAgICAgICAgICAgICAgPHJkZjpsaT5qc2FuZGVyc29uPC9yZGY6bGk+CiAgICAgICAgICAgIDwvcmRmOlNlcT4KICAgICAgICAgPC9kYzpjcmVhdG9yPgogICAgICAgICA8ZGM6dGl0bGU+CiAgICAgICAgICAgIDxyZGY6QWx0PgogICAgICAgICAgICAgICA8cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPk1pY3Jvc29mdCBXb3JkIC0gY2FwZjEwNGEgMjAwOSAwOC5kb2M8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6QWx0PgogICAgICAgICA8L2RjOnRpdGxlPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6eGFwPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIj4KICAgICAgICAgPHhhcDpDcmVhdGVEYXRlPjIwMDktMDgtMTdUMTA6MTE6MTEtMDU6MDA8L3hhcDpDcmVhdGVEYXRlPgogICAgICAgICA8eGFwOkNyZWF0b3JUb29sPlBTY3JpcHQ1LmRsbCBWZXJzaW9uIDUuMjwveGFwOkNyZWF0b3JUb29sPgogICAgICAgICA8eGFwOk1vZGlmeURhdGU+MjAwOS0wOC0xN1QxMDoxMToxMS0wNTowMDwveGFwOk1vZGlmeURhdGU+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczpwZGY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vcGRmLzEuMy8iPgogICAgICAgICA8cGRmOlByb2R1Y2VyPkFjcm9iYXQgRGlzdGlsbGVyIDguMS4wIChXaW5kb3dzKTwvcGRmOlByb2R1Y2VyPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6eGFwTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iPgogICAgICAgICA8eGFwTU06RG9jdW1lbnRJRD51dWlkOjYyOWJkYmIwLWZkYzgtNDhjMy1hNzJiLWM0OWJhNTZmZmQxNjwveGFwTU06RG9jdW1lbnRJRD4KICAgICAgICAgPHhhcE1NOkluc3RhbmNlSUQ+dXVpZDphMzRkZjRiZi03NTY4LTQ0Y2ItOTQwZC0zNzk4ZmJlNmM3Yjg8L3hhcE1NOkluc3RhbmNlSUQ+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgCjw/eHBhY2tldCBlbmQ9InciPz4NCmVuZHN0cmVhbQ1lbmRvYmoNOCAwIG9iag08PC9DcmVhdGlvbkRhdGUoRDoyMDA5MDgxNzEwMTExMS0wNScwMCcpL0F1dGhvcihqc2FuZGVyc29uKS9DcmVhdG9yKFBTY3JpcHQ1LmRsbCBWZXJzaW9uIDUuMikvUHJvZHVjZXIoQWNyb2JhdCBEaXN0aWxsZXIgOC4xLjAgXChXaW5kb3dzXCkpL01vZERhdGUoRDoyMDA5MDgxNzEwMTExMS0wNScwMCcpL1RpdGxlKE1pY3Jvc29mdCBXb3JkIC0gY2FwZjEwNGEgMjAwOSAwOC5kb2MpPj4NZW5kb2JqDXhyZWYNCjAgOQ0KMDAwMDAwMDAwMCA2NTUzNSBmDQowMDAwMDE2MDc1IDAwMDAwIG4NCjAwMDAwMTYyMDIgMDAwMDAgbg0KMDAwMDAxNjMwOCAwMDAwMCBuDQowMDAwMDI2OTIxIDAwMDAwIG4NCjAwMDAwMjY5NTUgMDAwMDAgbg0KMDAwMDAyNjk3OSAwMDAwMCBuDQowMDAwMDI3MDM3IDAwMDAwIG4NCjAwMDAwMzA3MTcgMDAwMDAgbg0KdHJhaWxlcg0KPDwvU2l6ZSA5Pj4NCnN0YXJ0eHJlZg0KMTE2DQolJUVPRg0K';
   const F_FIELDS = ['f_track', 'f_msn', 'f_date', 'f_name', 'f_capid', 'f_role', 'f_area', 'f_grid', 'f_cfmt', 'f_nwLat', 'f_nwLon', 'f_neLat', 'f_neLon', 'f_swLat', 'f_swLon', 'f_seLat', 'f_seLon', 'f_patP', 'f_patA', 'f_visP', 'f_visA', 'f_altP', 'f_altA', 'f_spdP', 'f_spdA', 'f_spcP', 'f_spcA', 'f_terP', 'f_terA', 'f_covP', 'f_covA', 'f_turP', 'f_turA', 'f_podP', 'f_podA', 'f_engOn', 'f_wheelsUp', 'f_tStart', 'f_tEnd', 'f_wheelsDown', 'f_engOff', 'f_tTo', 'f_tIn', 'f_tFrom', 'f_tTotal', 'f_eff', 'f_effScore', 'f_vis', 'f_visScore', 'f_remarks'];
-  const F_TIME_MAP = { f_engOn: 'engOn', f_wheelsUp: 'wheelsUp', f_wheelsDown: 'wheelsDown', f_engOff: 'engOff' };
+  const F_TIME_MAP = { f_engOn: 'engOn', f_wheelsUp: 'wheelsUp', f_wheelsDown: 'wheelsDown', f_engOff: 'engOff', f_tStart: 'inArea', f_tEnd: 'outArea' };
   const f104 = {};
   F_FIELDS.forEach(id => f104[id] = '');
   const f104Auto = { podP: true, podA: true, tIn: true, tTotal: true };
@@ -2472,21 +2522,32 @@ function wmmDeclination(lat, lon, altKm, year) {
   }));
   F_FIELDS.forEach(id => { if ($(id).tagName === 'SELECT') $(id).addEventListener('change', () => { f104[id] = $(id).value; f104Compute(); autosave(); }); });
   function f104SyncFromTimes() { Object.entries(F_TIME_MAP).forEach(([fid, k]) => { if (times[k] && !f104[fid]) { f104[fid] = times[k]; $(fid).value = times[k]; } }); f104Compute(); }
-  $('f_timesFromDf').addEventListener('click', () => { Object.entries(F_TIME_MAP).forEach(([fid, k]) => { f104[fid] = times[k] || ''; $(fid).value = f104[fid]; }); f104Compute(); autosave(); toast('Engine and wheels times copied.'); });
-  document.querySelectorAll('.f104 button[data-mark]').forEach(btn => btn.addEventListener('click', () => { const id = btn.dataset.mark, v = new Date().toTimeString().slice(0, 5); $(id).value = v; f104[id] = v; if (F_TIME_MAP[id]) { times[F_TIME_MAP[id]] = v; renderTimes(); } f104Compute(); autosave(); toast(v); }));
+  document.querySelectorAll('.f104 button[data-mark]').forEach(btn => btn.addEventListener('click', () => { const id = btn.dataset.mark, v = nowStamp(); $(id).value = v; f104[id] = v; if (F_TIME_MAP[id]) { times[F_TIME_MAP[id]] = v; renderTimes(); } f104Compute(); autosave(); toast(v); }));
   $('f_cornersBtn').addEventListener('click', () => {
-    if (plan.length < 2) { toast('Build or import the search pattern in the Planner first.'); return; }
-    const lats = plan.map(p => p.lat), lons = plan.map(p => p.lon), n = Math.max(...lats), s = Math.min(...lats), w = Math.min(...lons), e = Math.max(...lons), f = $('f_cfmt').value;
+    const af = areaFrame(); let n, s, w, e, src;
+    if (af) { const a = af.toLL({ x: af.xmin, y: af.ymin }), b = af.toLL({ x: af.xmax, y: af.ymax }); s = a[0]; w = a[1]; n = b[0]; e = b[1]; src = 'the Search area'; }
+    else if (plan.length >= 2) { const lats = plan.map(p => p.lat), lons = plan.map(p => p.lon); n = Math.max(...lats); s = Math.min(...lats); w = Math.min(...lons); e = Math.max(...lons); src = 'the flight plan'; }
+    else { toast('Define the Search area or build the flight plan in the Mission tab first.'); return; }
+    const f = $('f_cfmt').value;
     [['f_nwLat', n, false], ['f_nwLon', w, true], ['f_neLat', n, false], ['f_neLon', e, true], ['f_swLat', s, false], ['f_swLon', w, true], ['f_seLat', s, false], ['f_seLon', e, true]].forEach(([id, v, isLon]) => { const t = fmtCoord(v, isLon, f); $(id).value = t; f104[id] = t; });
-    const ch = chartFor((n + s) / 2, (w + e) / 2); if (ch && !f104.f_grid) { const step = 0.25, cl = (n + s) / 2, cn = (w + e) / 2, cols = Math.round((ch[4] - ch[5]) / step), row = Math.floor((ch[2] - cl) / step), col = Math.floor((ch[4] + cn) / step); const g = ch[0] + ' ' + (row * cols + col + 1); $('f_grid').value = g; f104.f_grid = g; }
-    f104Compute(); autosave(); toast('Corners filled from the flight plan.');
+    if (!f104.f_grid) { let g = ''; if (gridSel.length) g = gqSummary(); else { const q = gridOf((n + s) / 2, (w + e) / 2); if (q) g = q.slice(0, -1); } if (g) { $('f_grid').value = g; f104.f_grid = g; } }
+    f104Compute(); autosave(); toast('Corners filled from ' + src + '.');
   });
-  $('f_clearBtn').addEventListener('click', async () => { if (!await ask('Clear all 104a entries for a new sortie? Mission number, date, name, and CAPID are kept.')) return; F_FIELDS.forEach(id => { if (!['f_msn', 'f_date', 'f_name', 'f_capid', 'f_role'].includes(id)) f104[id] = ''; }); Object.assign(f104Auto, { podP: true, podA: true, tIn: true, tTotal: true }); f104Load(); autosave(); toast('104a cleared.'); });
+  $('f_clearBtn').addEventListener('click', async () => {
+    if (!await ask('Start a new sortie? This clears every 104a entry except mission number, date, name, and CAPID, and clears the mission times (engine, wheels, search area) so they are not carried into the next sortie.')) return;
+    F_FIELDS.forEach(id => { if (!['f_msn', 'f_date', 'f_name', 'f_capid', 'f_role'].includes(id)) f104[id] = ''; });
+    Object.assign(f104Auto, { podP: true, podA: true, tIn: true, tTotal: true });
+    TIME_KEYS.forEach(([k]) => { times[k] = null; }); fly = { airborne: false, fastSince: null, slowSince: null }; areaState = { inside: null, since: null };
+    $('sortieBox').style.display = 'none'; $('sortieBox').innerHTML = '';
+    f104Load(); renderTimes(); autosave();
+    if (track.length && await ask('Also clear the flown track (' + track.length + ' points)? The next sortie summary would otherwise include it. Export it first if you want to keep it.', { })) { track = []; renderTrack(); autosave(); }
+    toast('104a and mission times cleared for a new sortie.');
+  });
   // Sortie summary from the recorded track: fills empty 104a entries and reports what it found.
   function sortieSummary(auto) {
     if (track.length < 2) { if (!auto) toast('No flown track recorded yet.'); return; }
     const g = id => f104[id] || '';
-    const tod = p => { const d = new Date(p.t); return d.getHours() * 60 + d.getMinutes(); };
+    const tod = p => { const d = new Date(p.t); return zulu ? d.getUTCHours() * 60 + d.getUTCMinutes() : d.getHours() * 60 + d.getMinutes(); };
     const s0 = hhmm(g('f_tStart')) ?? hhmm(g('f_wheelsUp')), e0 = hhmm(g('f_tEnd')) ?? hhmm(g('f_wheelsDown'));
     const inWin = p => { if (s0 === null || e0 === null) return true; const m = tod(p); return e0 >= s0 ? (m >= s0 && m <= e0) : (m >= s0 || m <= e0); };
     const win = track.filter(inWin);
@@ -2562,10 +2623,10 @@ function wmmDeclination(lat, lon, altKm, year) {
     box(479.5, 563, vis === 'Excellent'); box(534.5, 563, vis === 'Good'); box(576, 563, vis === 'Fair'); box(608, 563, vis === 'Poor'); put(700, 562.5, g('f_visScore'), 9);
     // Written comments on the left panel, wrapped
     const words = g('f_remarks').replace(/\r/g, '').split(/(\n)/), lines = []; let cur = '';
-    words.forEach(chunk => { if (chunk === '\n') { lines.push(cur); cur = ''; return; } chunk.split(' ').forEach(w => { const t = cur ? cur + ' ' + w : w; if (font.widthOfTextAtSize(t, 8.5) > 540) { lines.push(cur); cur = w; } else cur = t; }); });
+    words.forEach(chunk => { if (chunk === '\n') { lines.push(cur); cur = ''; return; } chunk.split(' ').forEach(w => { const t = cur ? cur + ' ' + w : w; if (font.widthOfTextAtSize(t, 8.5) > 330) { lines.push(cur); cur = w; } else cur = t; }); });
     if (cur) lines.push(cur);
-    lines.slice(0, 44).forEach((ln, i) => put(40, 72 + i * 11, ln, 8.5));
-    if (lines.length > 44) put(40, 72 + 44 * 11, '(continued remarks truncated; see attached)', 8);
+    lines.slice(0, 45).forEach((ln, i) => put(40, 72 + i * 11, ln, 8.5));
+    if (lines.length > 45) put(40, 72 + 45 * 11, '(remarks continue in the readable log)', 8);
     doc.removePage(1);
     const out = await doc.save();
     const name = 'CAPF104a_' + (g('f_msn') || 'sortie').replace(/[^\w\-]+/g, '_') + '_' + stamp() + '.pdf';
@@ -2782,7 +2843,7 @@ function wmmDeclination(lat, lon, altKm, year) {
     });
   }
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
-  function updateNet() { const on = navigator.onLine; $('net').innerHTML = '<span class="dot' + (on ? '' : ' off') + '"></span>' + (on ? 'Online' : 'Offline'); }
+  function updateNet() { const on = navigator.onLine; $('net').innerHTML = '<span class="dot' + (on ? '' : ' off') + '"></span>' + (on ? '' : 'Offline'); $('net').title = on ? 'Online' : 'Offline'; }
 
   // Long instruction paragraphs become collapsible so panels stay compact.
   document.querySelectorAll('.scroll .hint').forEach(h => {
@@ -2796,7 +2857,9 @@ function wmmDeclination(lat, lon, altKm, year) {
   ['fmt', 'entryFmt', 'crsRef', 'gs'].forEach(id => $(id).addEventListener('change', () => { try { localStorage.setItem('fp-' + id, $(id).value); } catch (e) {} }));
   applyUiSize(); applyKeypadMode(); applyFmt('entryFmt'); applyFmt('dfFmt'); applyFmt('repFmt'); patFieldVis(); podUpdate();
   // mode
-  function setMode(m) { document.body.dataset.mode = m; { const a = $('areaFold'); if (m === 'df') $('repFold').after(a); else if (m === 'plan') $('planFold').after(a); } if (m !== 'sim' && document.body.classList.contains('becker-only')) setBeckerOnly(false); document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); hideKeypad(); if (mapMode) setMapMode(null); }
+  function setMode(m) { document.body.dataset.mode = m; if (m !== 'sim' && document.body.classList.contains('becker-only')) setBeckerOnly(false); document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); hideKeypad(); if (mapMode) setMapMode(null); }
+  // One Mission tab: panels in sortie order.
+  { const sc = document.querySelector('.scroll'); ['repFold', 'areaFold', 'planFold', 'sarFold', 'newFold', 'listFold', 'foundFold', 'saveFold', 'gdfFold', 'ioFold'].forEach(id => { const el = $(id); if (el) sc.appendChild(el); }); ['setFold', 'gpsFold', 'dfSetFold', 'offFold'].forEach(id => sc.appendChild($(id))); }
   $('modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
   $('undoBtn').addEventListener('click', undo); $('redoBtn').addEventListener('click', redo); $('undoAllBtn').addEventListener('click', undoAll);
   // DF
@@ -2874,7 +2937,10 @@ function wmmDeclination(lat, lon, altKm, year) {
   $('sarFold').addEventListener('toggle', () => { if ($('sarFold').open) patFieldVis(); });
   $('patType').addEventListener('change', patFieldVis);
   $('patInsertBtn').addEventListener('click', insertPattern);
-  $('recTrack').addEventListener('change', syncWatch); $('followShip').addEventListener('change', syncWatch);
+  $('recTrack').addEventListener('change', () => { syncWatch(); renderGpsBtn(); }); $('followShip').addEventListener('change', syncWatch);
+  $('timeRef').value = zulu ? 'z' : 'l'; $('timeRef').addEventListener('change', () => { zulu = $('timeRef').value === 'z'; try { localStorage.setItem('fp-zulu', zulu ? '1' : '0'); } catch (e) {} renderTimes(); toast('Mission times now recorded in ' + (zulu ? 'Zulu.' : 'local time.') + ' Times already recorded are not converted.'); });
+  $('autoArea').addEventListener('change', () => { try { localStorage.setItem('fp-autoarea', $('autoArea').checked ? '1' : '0'); } catch (e) {} });
+  try { if (localStorage.getItem('fp-autoarea') === '0') $('autoArea').checked = false; } catch (e) {}
   try { const aw = localStorage.getItem('fp-autowheels'); if (aw !== null) $('autoWheels').checked = aw === '1'; } catch (e) {}
   $('autoWheels').addEventListener('change', () => { try { localStorage.setItem('fp-autowheels', $('autoWheels').checked ? '1' : '0'); } catch (e) {} });
   $('gpsAltOff').addEventListener('change', () => { try { localStorage.setItem('fp-altoff', $('gpsAltOff').value); } catch (e) {} });
@@ -2889,7 +2955,9 @@ function wmmDeclination(lat, lon, altKm, year) {
   $('offDlBtn').addEventListener('click', downloadOffline); $('offCancelBtn').addEventListener('click', () => { dlCancel = true; }); $('offDelBtn').addEventListener('click', async () => { if (!await ask('Delete all stored offline map tiles?')) return; try { await clearStore(); toast('Offline maps deleted.'); layers.usgs.redraw(); layers.sec.redraw(); layers.img.redraw(); } catch (e) { toast('Could not delete stored maps.'); } refreshOfflineStatus(); });
   window.addEventListener('online', () => { updateNet(); layers.usgs.redraw(); layers.sec.redraw(); layers.img.redraw(); }); window.addEventListener('offline', updateNet);
   updateNet(); render({ noCommit: true }); renderDF({ noCommit: true }); refreshOfflineStatus(); restoreSession();
-  try { if (localStorage.getItem('fp-rec') === '1') { $('recTrack').checked = true; syncWatch(); toast('Track recording resumed.'); } } catch (e) {}
+  $('gpsAutoStart').addEventListener('change', () => { try { localStorage.setItem('fp-gpsauto', $('gpsAutoStart').checked ? '1' : '0'); } catch (e) {} });
+  try { const auto = localStorage.getItem('fp-gpsauto') === '1'; $('gpsAutoStart').checked = auto; if (localStorage.getItem('fp-rec') === '1' || auto) { $('recTrack').checked = true; syncWatch(); toast(auto ? 'GPS tracking started.' : 'Track recording resumed.'); } } catch (e) {}
+  renderGpsBtn();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 })();
